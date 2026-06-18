@@ -555,11 +555,7 @@ function buildCard(job) {
   const responsibleBadge = job.responsible
     ? `<span class="badge badge-responsible">${job.responsible}</span>` : '';
 
-  const photoHtml = job.photo
-    ? `<div class="job-photo-wrap">
-        <img class="job-photo" src="${esc(job.photo)}" alt="Photo of issue" loading="lazy"
-          onclick="openLightbox('${esc(job.photo)}')">
-      </div>` : '';
+  const photoHtml = job.photo ? buildMediaHtml(job.photo) : '';
 
   const notesHtml = job.notes
     ? `<div class="job-notes">${esc(job.notes)}</div>` : '';
@@ -720,6 +716,26 @@ async function saveFeedback(jobId) {
 function saveName() {
   const name = document.getElementById('volunteer-name').value.trim();
   if (name) localStorage.setItem('freshie_name', name);
+}
+
+// ── Media helpers ─────────────────────────────────────────────
+function isVideo(url) {
+  return /\.(mov|mp4|webm|m4v|avi)(\?.*)?$/i.test(url);
+}
+
+function buildMediaHtml(url) {
+  if (isVideo(url)) {
+    return `<div class="job-photo-wrap">
+      <video class="job-photo" src="${esc(url)}" controls preload="none"
+        onclick="event.stopPropagation()" style="background:#000;cursor:default">
+        Your browser does not support video.
+      </video>
+    </div>`;
+  }
+  return `<div class="job-photo-wrap">
+    <img class="job-photo" src="${esc(url)}" alt="Photo of issue" loading="lazy"
+      onclick="openLightbox('${esc(url)}')">
+  </div>`;
 }
 
 // ── Lightbox ─────────────────────────────────────────────────
