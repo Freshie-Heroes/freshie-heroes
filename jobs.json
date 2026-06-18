@@ -1,0 +1,65 @@
+{
+  "updated": "2026-06-18T08:00:00Z",
+  "jobs": [
+    {
+      "id": "001",
+      "priority": "High",
+      "date": "2026-06-15",
+      "location": "Main Clubhouse — Front Entrance",
+      "issue": "Handrail loose on front steps",
+      "safety_concern": "Yes",
+      "photo": "",
+      "responsible": "Club",
+      "category": "Repair",
+      "notes": "Has been reported twice. Needs urgent attention before weekend patrol."
+    },
+    {
+      "id": "002",
+      "priority": "Medium",
+      "date": "2026-06-14",
+      "location": "Beach — Patrol Box 3",
+      "issue": "Patrol box door hinge broken",
+      "safety_concern": "No",
+      "photo": "",
+      "responsible": "Club",
+      "category": "Repair",
+      "notes": "Door still closes but difficult to lock."
+    },
+    {
+      "id": "003",
+      "priority": "Low",
+      "date": "2026-06-12",
+      "location": "Carpark — North End",
+      "issue": "Line markings faded and hard to see",
+      "safety_concern": "No",
+      "photo": "",
+      "responsible": "Council",
+      "category": "Painting",
+      "notes": "Reported to council. Follow up required."
+    },
+    {
+      "id": "004",
+      "priority": "High",
+      "date": "2026-06-16",
+      "location": "Clubhouse — Shower Block",
+      "issue": "Hot water not working in shower 2",
+      "safety_concern": "No",
+      "photo": "",
+      "responsible": "Trades",
+      "category": "Repair",
+      "notes": "Plumber needs to be called. Affects post-patrol cleanup."
+    },
+    {
+      "id": "005",
+      "priority": "Low",
+      "date": "2026-06-10",
+      "location": "Beach — Flag Storage Area",
+      "issue": "Area needs general clean and tidy",
+      "safety_concern": "No",
+      "photo": "",
+      "responsible": "Club",
+      "category": "Cleaning",
+      "notes": ""
+    }
+  ]
+}

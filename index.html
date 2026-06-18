@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Freshie Heros — Job Board</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --maroon: #7B1A1A;
+      --maroon-dark: #5a1212;
+      --maroon-light: #9e2222;
+      --cream: #F5F0E8;
+      --cream-dark: #ebe4d6;
+      --sand: #FAF7F2;
+      --wave: #1a6b8a;
+      --wave-light: #e6f3f8;
+      --ink: #2C2C2A;
+      --ink-mid: #5a5a58;
+      --stone: #D3CFC7;
+      --green: #2d6a2d;
+      --green-light: #e8f5e8;
+      --orange: #c25a00;
+      --orange-light: #fff3e0;
+      --red: #b91c1c;
+      --red-light: #fef2f2;
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--sand);
+      color: var(--ink);
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--maroon);
+      color: var(--cream);
+      padding: 0;
+    }
+    .header-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 20px 20px 16px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+    .header-logo {
+      width: 72px;
+      height: 72px;
+      border-radius: 10px;
+      object-fit: cover;
+      flex-shrink: 0;
+      border: 2px solid rgba(245,240,232,0.25);
+    }
+    .header-text h1 {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      line-height: 1.1;
+      color: var(--cream);
+    }
+    .header-text .subtitle {
+      font-size: 12px;
+      color: rgba(245,240,232,0.7);
+      margin-top: 3px;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+    }
+    .header-bar {
+      background: var(--maroon-dark);
+      padding: 8px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 11px;
+      color: rgba(245,240,232,0.6);
+      text-align: center;
+      letter-spacing: 0.3px;
+    }
+    #last-updated { color: rgba(245,240,232,0.85); font-weight: 600; }
+
+    /* ── Controls ── */
+    .controls {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 16px 20px 12px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .search-wrap { position: relative; flex: 1; min-width: 180px; }
+    .search-wrap input {
+      width: 100%;
+      padding: 9px 12px 9px 34px;
+      border: 1px solid var(--stone);
+      border-radius: 7px;
+      font-size: 13px;
+      font-family: var(--font);
+      background: #fff;
+    }
+    .search-wrap input:focus { outline: none; border-color: var(--maroon); }
+    .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 13px; color: #aaa; }
+    .filter-select {
+      padding: 9px 10px;
+      border: 1px solid var(--stone);
+      border-radius: 7px;
+      font-size: 13px;
+      font-family: var(--font);
+      background: #fff;
+      color: var(--ink);
+    }
+    .filter-select:focus { outline: none; border-color: var(--maroon); }
+    .toggle-done {
+      padding: 9px 14px;
+      border: 1px solid var(--stone);
+      border-radius: 7px;
+      font-size: 12px;
+      font-weight: 600;
+      background: #fff;
+      color: var(--ink-mid);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.12s;
+    }
+    .toggle-done.active { background: var(--maroon); color: var(--cream); border-color: var(--maroon); }
+
+    /* ── Name banner ── */
+    .name-banner {
+      max-width: 1100px;
+      margin: 0 auto 4px;
+      padding: 0 20px;
+    }
+    .name-row {
+      background: var(--cream);
+      border: 1px solid var(--stone);
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+    }
+    .name-row label { color: var(--ink-mid); white-space: nowrap; font-weight: 500; }
+    .name-row input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      font-size: 13px;
+      font-family: var(--font);
+      color: var(--ink);
+      max-width: 220px;
+    }
+    .name-row input:focus { outline: none; }
+    .name-row input::placeholder { color: #bbb; }
+    .name-hint { font-size: 11px; color: #aaa; }
+
+    /* ── Stats bar ── */
+    .stats-bar {
+      max-width: 1100px;
+      margin: 10px auto 0;
+      padding: 0 20px;
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .stat-chip {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .stat-chip.total { background: rgba(123,26,26,0.08); color: var(--maroon); }
+    .stat-chip.high { background: var(--red-light); color: var(--red); }
+    .stat-chip.done-count { background: var(--green-light); color: var(--green); }
+    .stat-dot { width: 7px; height: 7px; border-radius: 50%; }
+
+    /* ── Job cards ── */
+    .jobs-wrap {
+      max-width: 1100px;
+      margin: 14px auto 40px;
+      padding: 0 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .job-card {
+      background: #fff;
+      border: 1px solid var(--stone);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: border-color 0.15s, opacity 0.2s;
+    }
+    .job-card.is-done { opacity: 0.6; }
+    .job-card.is-done .job-title { text-decoration: line-through; color: #aaa; }
+    .job-card.hidden { display: none; }
+
+    .job-header {
+      padding: 14px 16px 10px;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .job-number {
+      font-size: 10px;
+      font-weight: 700;
+      color: #aaa;
+      padding-top: 2px;
+      white-space: nowrap;
+      min-width: 36px;
+    }
+    .job-main { flex: 1; min-width: 0; }
+    .job-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--ink);
+      line-height: 1.35;
+      margin-bottom: 6px;
+    }
+    .job-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 6px; }
+    .badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+    }
+    .badge-high { background: var(--red-light); color: var(--red); border: 1px solid #fecaca; }
+    .badge-medium { background: var(--orange-light); color: var(--orange); border: 1px solid #fed7aa; }
+    .badge-low { background: var(--green-light); color: var(--green); border: 1px solid #bbf7d0; }
+    .badge-safety { background: #7B1A1A; color: #fff; }
+    .badge-category { background: var(--wave-light); color: var(--wave); border: 1px solid #bae6fd; }
+    .badge-responsible { background: var(--cream-dark); color: var(--ink-mid); border: 1px solid var(--stone); }
+
+    .job-location {
+      font-size: 12px;
+      color: var(--ink-mid);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .job-location .loc-icon { font-size: 11px; }
+
+    /* Photo */
+    .job-photo-wrap { padding: 0 16px 12px 62px; }
+    .job-photo {
+      width: 100%;
+      max-width: 340px;
+      border-radius: 7px;
+      cursor: pointer;
+      border: 1px solid var(--stone);
+      transition: opacity 0.15s;
+      display: block;
+    }
+    .job-photo:hover { opacity: 0.88; }
+
+    /* Notes */
+    .job-notes { padding: 0 16px 12px 62px; font-size: 12px; color: var(--ink-mid); line-height: 1.6; }
+
+    /* Date */
+    .job-date { font-size: 10px; color: #bbb; padding: 0 16px 10px 62px; }
+
+    /* Footer actions */
+    .job-footer {
+      border-top: 1px solid var(--cream-dark);
+      background: var(--cream);
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .done-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .done-checkbox {
+      width: 20px;
+      height: 20px;
+      accent-color: var(--maroon);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .done-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink);
+      cursor: pointer;
+      flex: 1;
+    }
+    .done-by { font-size: 10px; color: #aaa; }
+
+    .feedback-wrap { display: flex; flex-direction: column; gap: 6px; }
+    .feedback-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: var(--ink-mid); }
+    .feedback-input {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid var(--stone);
+      border-radius: 6px;
+      font-size: 12px;
+      font-family: var(--font);
+      resize: vertical;
+      min-height: 60px;
+      line-height: 1.5;
+      color: var(--ink);
+      background: #fff;
+    }
+    .feedback-input:focus { outline: none; border-color: var(--maroon); }
+    .feedback-save-row { display: flex; align-items: center; gap: 8px; }
+    .save-btn {
+      padding: 5px 14px;
+      background: var(--maroon);
+      color: var(--cream);
+      border: none;
+      border-radius: 5px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: var(--font);
+      transition: background 0.12s;
+    }
+    .save-btn:hover { background: var(--maroon-light); }
+    .save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .save-status { font-size: 11px; color: var(--green); display: none; }
+    .save-status.visible { display: inline; }
+
+    /* ── Photo lightbox ── */
+    #lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 999;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    #lightbox.open { display: flex; }
+    #lightbox img { max-width: 100%; max-height: 90vh; border-radius: 8px; }
+    #lightbox-close {
+      position: fixed;
+      top: 16px;
+      right: 20px;
+      color: #fff;
+      font-size: 28px;
+      cursor: pointer;
+      line-height: 1;
+      opacity: 0.8;
+    }
+    #lightbox-close:hover { opacity: 1; }
+
+    /* ── Empty state ── */
+    .empty-state {
+      text-align: center;
+      padding: 50px 20px;
+      color: #bbb;
+    }
+    .empty-state .icon { font-size: 36px; margin-bottom: 12px; opacity: 0.4; }
+    .empty-state p { font-size: 13px; line-height: 1.7; }
+
+    /* ── Loading ── */
+    #loading-bar {
+      background: var(--maroon);
+      height: 3px;
+      width: 0%;
+      transition: width 0.3s;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 1000;
+    }
+
+    /* ── Mobile ── */
+    @media (max-width: 600px) {
+      .header-text h1 { font-size: 22px; }
+      .controls { gap: 8px; }
+      .filter-select { font-size: 12px; }
+      .job-photo-wrap { padding-left: 16px; }
+      .job-notes { padding-left: 16px; }
+      .job-date { padding-left: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="loading-bar"></div>
+
+<header>
+  <div class="header-inner">
+    <img src="logo.png" alt="Freshie Heros" class="header-logo">
+    <div class="header-text">
+      <h1>Freshie Heros</h1>
+      <div class="subtitle">Freshwater Surf Life Saving Club · Job Board</div>
+    </div>
+  </div>
+  <div class="header-bar">
+    <span>Not all heroes wear patrol caps · Fix it · Clean it · Paint it · Keep it Fresh</span>
+    &nbsp;·&nbsp;
+    <span>Last updated: <span id="last-updated">Loading...</span></span>
+  </div>
+</header>
+
+<div class="controls">
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="search" placeholder="Search jobs..." oninput="applyFilters()">
+  </div>
+  <select class="filter-select" id="filter-priority" onchange="applyFilters()">
+    <option value="">All priorities</option>
+    <option value="High">High</option>
+    <option value="Medium">Medium</option>
+    <option value="Low">Low</option>
+  </select>
+  <select class="filter-select" id="filter-category" onchange="applyFilters()">
+    <option value="">All categories</option>
+    <option value="Repair">Repair</option>
+    <option value="Replace">Replace</option>
+    <option value="Painting">Painting</option>
+    <option value="Cleaning">Cleaning</option>
+  </select>
+  <select class="filter-select" id="filter-responsible" onchange="applyFilters()">
+    <option value="">All responsible</option>
+    <option value="Club">Club</option>
+    <option value="Council">Council</option>
+    <option value="Trades">Trades</option>
+  </select>
+  <button class="toggle-done" id="toggle-done-btn" onclick="toggleShowDone()">Hide Completed</button>
+</div>
+
+<div class="name-banner">
+  <div class="name-row">
+    <label for="volunteer-name">👤 Your name:</label>
+    <input type="text" id="volunteer-name" placeholder="Enter your name to log updates..." oninput="saveName()">
+    <span class="name-hint">Used when you mark jobs done or add feedback</span>
+  </div>
+</div>
+
+<div class="stats-bar" id="stats-bar"></div>
+
+<div class="jobs-wrap" id="jobs-wrap">
+  <div class="empty-state">
+    <div class="icon">🌊</div>
+    <p>Loading jobs...</p>
+  </div>
+</div>
+
+<div id="lightbox" onclick="closeLightbox(event)">
+  <span id="lightbox-close" onclick="closeLightbox()">✕</span>
+  <img id="lightbox-img" src="" alt="">
+</div>
+
+<script>
+const API = 'https://batur-core-production.up.railway.app';
+const JOBS_URL = 'jobs.json';
+
+let allJobs = [];
+let feedbackData = {}; // job_id → { done, feedback, submitted_by, updated_at }
+let showDone = true;
+
+// ── Boot ────────────────────────────────────────────────────
+(async function boot() {
+  loadBar(10);
+  const name = localStorage.getItem('freshie_name');
+  if (name) document.getElementById('volunteer-name').value = name;
+
+  try {
+    const [jobsRes, feedbackRes] = await Promise.all([
+      fetch(JOBS_URL),
+      fetch(`${API}/surf/jobs`)
+    ]);
+    loadBar(70);
+
+    const jobsData = await jobsRes.json();
+    allJobs = jobsData.jobs || [];
+
+    if (jobsData.updated) {
+      const d = new Date(jobsData.updated);
+      document.getElementById('last-updated').textContent =
+        d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' }) +
+        ' ' + d.toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    const fd = await feedbackRes.json();
+    (fd.feedback || []).forEach(f => { feedbackData[f.job_id] = f; });
+
+    loadBar(100);
+    render();
+    setTimeout(() => { document.getElementById('loading-bar').style.display = 'none'; }, 400);
+  } catch (err) {
+    document.getElementById('jobs-wrap').innerHTML = `
+      <div class="empty-state">
+        <div class="icon">⚠️</div>
+        <p>Could not load jobs. Check your connection and try again.</p>
+      </div>`;
+    loadBar(0);
+  }
+})();
+
+function loadBar(pct) {
+  const bar = document.getElementById('loading-bar');
+  bar.style.display = 'block';
+  bar.style.width = pct + '%';
+}
+
+// ── Render ───────────────────────────────────────────────────
+function render() {
+  const wrap = document.getElementById('jobs-wrap');
+  if (!allJobs.length) {
+    wrap.innerHTML = '<div class="empty-state"><div class="icon">🏄</div><p>No jobs listed yet.</p></div>';
+    return;
+  }
+
+  wrap.innerHTML = '';
+  allJobs.forEach(job => {
+    const el = buildCard(job);
+    wrap.appendChild(el);
+  });
+
+  applyFilters();
+  renderStats();
+}
+
+function buildCard(job) {
+  const fb = feedbackData[job.id] || {};
+  const isDone = fb.done || false;
+  const feedbackText = fb.feedback || '';
+  const doneBy = fb.submitted_by || '';
+
+  const card = document.createElement('div');
+  card.className = 'job-card' + (isDone ? ' is-done' : '');
+  card.dataset.id = job.id;
+  card.dataset.priority = job.priority || '';
+  card.dataset.category = job.category || '';
+  card.dataset.responsible = job.responsible || '';
+
+  const priorityBadge = job.priority
+    ? `<span class="badge badge-${job.priority.toLowerCase()}">${job.priority}</span>` : '';
+  const safetyBadge = job.safety_concern === 'Yes' || job.safety_concern === true
+    ? `<span class="badge badge-safety">⚠ Safety</span>` : '';
+  const categoryBadge = job.category
+    ? `<span class="badge badge-category">${job.category}</span>` : '';
+  const responsibleBadge = job.responsible
+    ? `<span class="badge badge-responsible">${job.responsible}</span>` : '';
+
+  const photoHtml = job.photo
+    ? `<div class="job-photo-wrap">
+        <img class="job-photo" src="${esc(job.photo)}" alt="Photo of issue" loading="lazy"
+          onclick="openLightbox('${esc(job.photo)}')">
+      </div>` : '';
+
+  const notesHtml = job.notes
+    ? `<div class="job-notes">${esc(job.notes)}</div>` : '';
+
+  const dateHtml = job.date
+    ? `<div class="job-date">Logged ${fmtDate(job.date)}</div>` : '';
+
+  const doneByHtml = (isDone && doneBy)
+    ? `<span class="done-by">Marked done by ${esc(doneBy)}</span>` : '';
+
+  card.innerHTML = `
+    <div class="job-header">
+      <div class="job-number">#${esc(job.id)}</div>
+      <div class="job-main">
+        <div class="job-title">${esc(job.issue)}</div>
+        <div class="job-badges">
+          ${priorityBadge}${safetyBadge}${categoryBadge}${responsibleBadge}
+        </div>
+        <div class="job-location">
+          <span class="loc-icon">📍</span>
+          <span>${esc(job.location)}</span>
+        </div>
+      </div>
+    </div>
+    ${photoHtml}
+    ${notesHtml}
+    ${dateHtml}
+    <div class="job-footer">
+      <div class="done-row">
+        <input type="checkbox" class="done-checkbox" id="done-${esc(job.id)}"
+          ${isDone ? 'checked' : ''}
+          onchange="toggleDone('${esc(job.id)}', this.checked)">
+        <label class="done-label" for="done-${esc(job.id)}">Mark as completed</label>
+        ${doneByHtml}
+      </div>
+      <div class="feedback-wrap">
+        <div class="feedback-label">Notes / Feedback</div>
+        <textarea class="feedback-input" id="feedback-${esc(job.id)}"
+          placeholder="Add any notes about this job — what you did, what's still needed...">${esc(feedbackText)}</textarea>
+        <div class="feedback-save-row">
+          <button class="save-btn" onclick="saveFeedback('${esc(job.id)}')">Save Notes</button>
+          <span class="save-status" id="save-status-${esc(job.id)}">✓ Saved</span>
+        </div>
+      </div>
+    </div>`;
+
+  return card;
+}
+
+function renderStats() {
+  const total = allJobs.length;
+  const high = allJobs.filter(j => j.priority === 'High').length;
+  const done = Object.values(feedbackData).filter(f => f.done).length;
+
+  document.getElementById('stats-bar').innerHTML = `
+    <div class="stat-chip total"><div class="stat-dot" style="background:#7B1A1A"></div>${total} job${total !== 1 ? 's' : ''} listed</div>
+    ${high ? `<div class="stat-chip high"><div class="stat-dot" style="background:#b91c1c"></div>${high} high priority</div>` : ''}
+    ${done ? `<div class="stat-chip done-count"><div class="stat-dot" style="background:#2d6a2d"></div>${done} completed</div>` : ''}
+  `;
+}
+
+// ── Filters ──────────────────────────────────────────────────
+function applyFilters() {
+  const search = document.getElementById('search').value.toLowerCase();
+  const priority = document.getElementById('filter-priority').value;
+  const category = document.getElementById('filter-category').value;
+  const responsible = document.getElementById('filter-responsible').value;
+
+  document.querySelectorAll('.job-card').forEach(card => {
+    const job = allJobs.find(j => j.id === card.dataset.id);
+    if (!job) return;
+
+    const isDone = feedbackData[job.id]?.done || false;
+    if (!showDone && isDone) { card.classList.add('hidden'); return; }
+
+    const matchSearch = !search ||
+      job.issue.toLowerCase().includes(search) ||
+      job.location.toLowerCase().includes(search) ||
+      (job.notes || '').toLowerCase().includes(search);
+    const matchPriority = !priority || job.priority === priority;
+    const matchCategory = !category || job.category === category;
+    const matchResponsible = !responsible || job.responsible === responsible;
+
+    card.classList.toggle('hidden', !(matchSearch && matchPriority && matchCategory && matchResponsible));
+  });
+}
+
+function toggleShowDone() {
+  showDone = !showDone;
+  const btn = document.getElementById('toggle-done-btn');
+  btn.textContent = showDone ? 'Hide Completed' : 'Show Completed';
+  btn.classList.toggle('active', !showDone);
+  applyFilters();
+}
+
+// ── Done toggle ──────────────────────────────────────────────
+async function toggleDone(jobId, done) {
+  const name = document.getElementById('volunteer-name').value.trim() || null;
+  const card = document.querySelector(`.job-card[data-id="${jobId}"]`);
+
+  try {
+    await fetch(`${API}/surf/jobs/${encodeURIComponent(jobId)}/done`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ done, submitted_by: name })
+    });
+
+    if (!feedbackData[jobId]) feedbackData[jobId] = {};
+    feedbackData[jobId].done = done;
+    feedbackData[jobId].submitted_by = name;
+
+    if (card) {
+      card.classList.toggle('is-done', done);
+      const title = card.querySelector('.job-title');
+      if (title) title.style.textDecoration = done ? 'line-through' : '';
+    }
+    renderStats();
+    applyFilters();
+  } catch {
+    // Revert checkbox on failure
+    const checkbox = document.getElementById(`done-${jobId}`);
+    if (checkbox) checkbox.checked = !done;
+  }
+}
+
+// ── Feedback ─────────────────────────────────────────────────
+async function saveFeedback(jobId) {
+  const name = document.getElementById('volunteer-name').value.trim() || null;
+  const textarea = document.getElementById(`feedback-${jobId}`);
+  const feedback = textarea ? textarea.value : '';
+  const btn = textarea?.closest('.job-footer')?.querySelector('.save-btn');
+  const statusEl = document.getElementById(`save-status-${jobId}`);
+
+  if (btn) btn.disabled = true;
+
+  try {
+    await fetch(`${API}/surf/jobs/${encodeURIComponent(jobId)}/feedback`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ feedback, submitted_by: name })
+    });
+
+    if (!feedbackData[jobId]) feedbackData[jobId] = {};
+    feedbackData[jobId].feedback = feedback;
+
+    if (statusEl) {
+      statusEl.classList.add('visible');
+      setTimeout(() => statusEl.classList.remove('visible'), 2500);
+    }
+  } catch {
+    if (statusEl) { statusEl.textContent = '✗ Could not save'; statusEl.style.color = '#c0392b'; statusEl.classList.add('visible'); }
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+// ── Name ─────────────────────────────────────────────────────
+function saveName() {
+  const name = document.getElementById('volunteer-name').value.trim();
+  if (name) localStorage.setItem('freshie_name', name);
+}
+
+// ── Lightbox ─────────────────────────────────────────────────
+function openLightbox(src) {
+  document.getElementById('lightbox-img').src = src;
+  document.getElementById('lightbox').classList.add('open');
+}
+function closeLightbox(e) {
+  if (!e || e.target !== document.getElementById('lightbox-img')) {
+    document.getElementById('lightbox').classList.remove('open');
+  }
+}
+
+// ── Helpers ──────────────────────────────────────────────────
+function esc(s) {
+  if (typeof s !== 'string') return '';
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function fmtDate(d) {
+  if (!d) return '';
+  return new Date(d).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+</script>
+</body>
+</html>
