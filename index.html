@@ -222,6 +222,8 @@
     }
     .job-card.is-done { opacity: 0.6; }
     .job-card.is-done .job-title { text-decoration: line-through; color: #aaa; }
+    #jobs-wrap.completed-view .job-card.is-done { opacity: 1; }
+    #jobs-wrap.completed-view .job-card.is-done .job-title { text-decoration: none; color: var(--ink); }
     .job-card.hidden { display: none; }
 
     .job-header {
@@ -1028,6 +1030,7 @@ function toggleCompletedView() {
   const bar = document.getElementById('completed-bar');
   btn.classList.toggle('active', showOnlyDone);
   bar.style.display = showOnlyDone ? 'flex' : 'none';
+  document.getElementById('jobs-wrap').classList.toggle('completed-view', showOnlyDone);
   // ensure completed jobs are visible when in completed view
   if (showOnlyDone && !showDone) {
     showDone = true;
