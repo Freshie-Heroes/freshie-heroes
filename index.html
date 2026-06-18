@@ -147,16 +147,17 @@
       align-items: center;
       gap: 10px;
       font-size: 13px;
+      flex-wrap: wrap;
     }
-    .name-row label { color: var(--ink-mid); white-space: nowrap; font-weight: 500; }
+    .name-row label { color: var(--ink-mid); white-space: nowrap; font-weight: 500; flex-shrink: 0; }
     .name-row input {
       flex: 1;
+      min-width: 140px;
       border: none;
       background: transparent;
       font-size: 13px;
       font-family: var(--font);
       color: var(--ink);
-      max-width: 220px;
     }
     .name-row input:focus { outline: none; }
     .name-row input::placeholder { color: #bbb; }
