@@ -512,6 +512,7 @@
       .controls { gap: 8px; }
       .filter-select { font-size: 12px; }
       .multi-select-btn { font-size: 12px; }
+      .multi-select-dropdown { min-width: 140px; }
       .job-photo-wrap { padding-left: 16px; }
       .job-notes { padding-left: 16px; }
       .job-date { padding-left: 16px; }
@@ -542,21 +543,31 @@
     <span class="search-icon">🔍</span>
     <input type="text" id="search" placeholder="Search jobs..." oninput="applyFilters()">
   </div>
-  <select class="filter-select" id="filter-priority" onchange="applyFilters()">
-    <option value="">🎯 All priorities</option>
-    <option value="High">🔴 High</option>
-    <option value="Medium">🟠 Medium</option>
-    <option value="Low">🟢 Low</option>
-  </select>
-  <select class="filter-select" id="filter-category" onchange="applyFilters()">
-    <option value="">📋 All categories</option>
-    <option value="Repair">🔧 Repair</option>
-    <option value="Replace">🔄 Replace</option>
-    <option value="Painting">🎨 Painting</option>
-    <option value="Cleaning">🧹 Cleaning</option>
-    <option value="Gardening">🌿 Gardening</option>
-    <option value="Repair/Paint">🔧🎨 Repair/Paint</option>
-  </select>
+  <div class="multi-select-wrap" id="priority-wrap">
+    <button class="multi-select-btn" id="priority-btn" onclick="toggleDropdown(event,'priority-dropdown','priority-btn')">
+      <span id="priority-label">🎯 All priorities</span>
+      <span class="multi-select-arrow">▾</span>
+    </button>
+    <div class="multi-select-dropdown" id="priority-dropdown">
+      <label class="multi-select-option"><input type="checkbox" value="High" onchange="updateMultiFilter('priority-dropdown','priority-label','🎯 All priorities')"> 🔴 High</label>
+      <label class="multi-select-option"><input type="checkbox" value="Medium" onchange="updateMultiFilter('priority-dropdown','priority-label','🎯 All priorities')"> 🟠 Medium</label>
+      <label class="multi-select-option"><input type="checkbox" value="Low" onchange="updateMultiFilter('priority-dropdown','priority-label','🎯 All priorities')"> 🟢 Low</label>
+    </div>
+  </div>
+  <div class="multi-select-wrap" id="category-wrap">
+    <button class="multi-select-btn" id="category-btn" onclick="toggleDropdown(event,'category-dropdown','category-btn')">
+      <span id="category-label">📋 All categories</span>
+      <span class="multi-select-arrow">▾</span>
+    </button>
+    <div class="multi-select-dropdown" id="category-dropdown">
+      <label class="multi-select-option"><input type="checkbox" value="Repair" onchange="updateMultiFilter('category-dropdown','category-label','📋 All categories')"> 🔧 Repair</label>
+      <label class="multi-select-option"><input type="checkbox" value="Replace" onchange="updateMultiFilter('category-dropdown','category-label','📋 All categories')"> 🔄 Replace</label>
+      <label class="multi-select-option"><input type="checkbox" value="Painting" onchange="updateMultiFilter('category-dropdown','category-label','📋 All categories')"> 🎨 Painting</label>
+      <label class="multi-select-option"><input type="checkbox" value="Cleaning" onchange="updateMultiFilter('category-dropdown','category-label','📋 All categories')"> 🧹 Cleaning</label>
+      <label class="multi-select-option"><input type="checkbox" value="Gardening" onchange="updateMultiFilter('category-dropdown','category-label','📋 All categories')"> 🌿 Gardening</label>
+      <label class="multi-select-option"><input type="checkbox" value="Repair/Paint" onchange="updateMultiFilter('category-dropdown','category-label','📋 All categories')"> 🔧🎨 Repair/Paint</label>
+    </div>
+  </div>
   <div class="multi-select-wrap" id="resp-wrap">
     <button class="multi-select-btn" id="resp-btn" onclick="toggleRespDropdown(event)">
       <span id="resp-label">👥 All responsible</span>
@@ -916,41 +927,51 @@ function renderStats() {
   `;
 }
 
-// ── Responsible multi-select ─────────────────────────────────
-function toggleRespDropdown(e) {
+// ── Multi-select dropdowns ────────────────────────────────────
+const MULTI_DROPDOWNS = ['priority-dropdown', 'category-dropdown', 'resp-dropdown'];
+
+function toggleDropdown(e, ddId, btnId) {
   e.stopPropagation();
-  const dd = document.getElementById('resp-dropdown');
-  const btn = document.getElementById('resp-btn');
-  const isOpen = dd.classList.toggle('open');
-  btn.classList.toggle('active', isOpen);
+  const isOpen = document.getElementById(ddId).classList.toggle('open');
+  document.getElementById(btnId).classList.toggle('active', isOpen);
+  MULTI_DROPDOWNS.filter(id => id !== ddId).forEach(id => {
+    document.getElementById(id).classList.remove('open');
+  });
+  document.getElementById('resp-btn').classList.toggle('active',
+    document.getElementById('resp-dropdown').classList.contains('open'));
+  document.getElementById('priority-btn').classList.toggle('active',
+    document.getElementById('priority-dropdown').classList.contains('open'));
+  document.getElementById('category-btn').classList.toggle('active',
+    document.getElementById('category-dropdown').classList.contains('open'));
 }
 
-function updateRespFilter() {
-  const checked = [...document.querySelectorAll('#resp-dropdown input:checked')].map(el => el.value);
-  const label = document.getElementById('resp-label');
-  if (checked.length === 0) {
-    label.textContent = '👥 All responsible';
-  } else if (checked.length === 1) {
-    label.textContent = checked[0];
-  } else {
-    label.textContent = `${checked.length} selected`;
-  }
+function updateMultiFilter(ddId, labelId, allLabel) {
+  const checked = [...document.querySelectorAll(`#${ddId} input:checked`)].map(el => el.value);
+  const label = document.getElementById(labelId);
+  label.textContent = checked.length === 0 ? allLabel : checked.length === 1 ? checked[0] : `${checked.length} selected`;
   applyFilters();
 }
 
+function toggleRespDropdown(e) { toggleDropdown(e, 'resp-dropdown', 'resp-btn'); }
+function updateRespFilter() { updateMultiFilter('resp-dropdown', 'resp-label', '👥 All responsible'); }
+
 document.addEventListener('click', e => {
-  const wrap = document.getElementById('resp-wrap');
-  if (wrap && !wrap.contains(e.target)) {
-    document.getElementById('resp-dropdown').classList.remove('open');
-    document.getElementById('resp-btn').classList.remove('active');
-  }
+  MULTI_DROPDOWNS.forEach(id => {
+    const dd = document.getElementById(id);
+    if (dd && !dd.closest('.multi-select-wrap').contains(e.target)) {
+      dd.classList.remove('open');
+    }
+  });
+  document.getElementById('priority-btn').classList.toggle('active', document.getElementById('priority-dropdown').classList.contains('open'));
+  document.getElementById('category-btn').classList.toggle('active', document.getElementById('category-dropdown').classList.contains('open'));
+  document.getElementById('resp-btn').classList.toggle('active', document.getElementById('resp-dropdown').classList.contains('open'));
 });
 
 // ── Filters ──────────────────────────────────────────────────
 function applyFilters() {
   const search = document.getElementById('search').value.toLowerCase();
-  const priority = document.getElementById('filter-priority').value;
-  const category = document.getElementById('filter-category').value;
+  const prioritySelected = [...document.querySelectorAll('#priority-dropdown input:checked')].map(el => el.value);
+  const categorySelected = [...document.querySelectorAll('#category-dropdown input:checked')].map(el => el.value);
   const respSelected = [...document.querySelectorAll('#resp-dropdown input:checked')].map(el => el.value);
 
   document.querySelectorAll('.job-card').forEach(card => {
@@ -964,8 +985,8 @@ function applyFilters() {
       job.issue.toLowerCase().includes(search) ||
       job.location.toLowerCase().includes(search) ||
       (job.notes || '').toLowerCase().includes(search);
-    const matchPriority = !priority || job.priority === priority;
-    const matchCategory = !category || job.category === category;
+    const matchPriority = prioritySelected.length === 0 || prioritySelected.includes(job.priority);
+    const matchCategory = categorySelected.length === 0 || categorySelected.includes(job.category);
     const matchResponsible = respSelected.length === 0 || respSelected.includes(job.responsible);
 
     card.classList.toggle('hidden', !(matchSearch && matchPriority && matchCategory && matchResponsible));
