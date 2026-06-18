@@ -413,6 +413,27 @@
       color: var(--ink-mid);
     }
 
+    /* ── Comments thread ── */
+    .comments-section { display: flex; flex-direction: column; gap: 0; }
+    .comments-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: var(--ink-mid); margin-bottom: 8px; }
+    .comment-thread { display: flex; flex-direction: column; }
+    .comment-entry { padding: 8px 0; border-top: 1px solid var(--cream-dark); }
+    .comment-entry:first-child { border-top: none; padding-top: 0; }
+    .comment-meta { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; flex-wrap: wrap; }
+    .comment-author { font-size: 11px; font-weight: 700; color: var(--ink); }
+    .comment-time { font-size: 10px; color: #aaa; }
+    .comment-text { font-size: 12px; color: var(--ink); line-height: 1.5; word-break: break-word; }
+    .comment-img { max-width: 100%; max-height: 160px; border-radius: 6px; margin-top: 6px; display: block; cursor: pointer; object-fit: cover; border: 1px solid var(--stone); }
+    .comment-vid { max-width: 100%; max-height: 160px; border-radius: 6px; margin-top: 6px; display: block; }
+    .comment-add { border-top: 1px solid var(--cream-dark); padding-top: 10px; margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
+    .comment-input { width: 100%; padding: 8px 10px; border: 1px solid var(--stone); border-radius: 6px; font-size: 12px; font-family: var(--font); resize: none; min-height: 52px; color: var(--ink); background: #fff; }
+    .comment-input:focus { outline: none; border-color: var(--maroon); }
+    .comment-action-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .comment-post-btn { padding: 6px 16px; background: var(--maroon); color: #fff; border: none; border-radius: 5px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: var(--font); }
+    .comment-post-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .comment-status { font-size: 11px; color: var(--green); }
+    .no-comments { font-size: 11px; color: #bbb; font-style: italic; padding: 4px 0 8px; }
+
     /* ── Photo lightbox ── */
     #lightbox {
       display: none;
@@ -542,8 +563,9 @@
 const API = 'https://batur-core-production.up.railway.app';
 
 let allJobs = [];
-let feedbackData = {}; // job_id → { done, feedback, photo, submitted_by, updated_at }
-let feedbackPhotoFiles = {}; // job_id → File (pending upload)
+let feedbackData = {}; // job_id → { done, submitted_by, updated_at }
+let commentsData = {}; // job_id → [ { id, comment, photo, submitted_by, created_at }, ... ]
+let commentPhotoFiles = {}; // job_id → File (pending upload for new comment)
 let showDone = true;
 
 // ── Boot ────────────────────────────────────────────────────
@@ -553,9 +575,10 @@ let showDone = true;
   if (name) document.getElementById('volunteer-name').value = name;
 
   try {
-    const [jobsRes, feedbackRes] = await Promise.all([
+    const [jobsRes, feedbackRes, commentsRes] = await Promise.all([
       fetch(`${API}/surf/jobs-list`),
-      fetch(`${API}/surf/jobs`)
+      fetch(`${API}/surf/jobs`),
+      fetch(`${API}/surf/comments`)
     ]);
     loadBar(70);
 
@@ -572,6 +595,12 @@ let showDone = true;
 
     const fd = await feedbackRes.json();
     (fd.feedback || []).forEach(f => { feedbackData[f.job_id] = f; });
+
+    const cd = await commentsRes.json();
+    (cd.comments || []).forEach(c => {
+      if (!commentsData[c.job_id]) commentsData[c.job_id] = [];
+      commentsData[c.job_id].push(c);
+    });
 
     loadBar(100);
     render();
@@ -641,7 +670,6 @@ function responsibleBadgeHtml(resp) {
 function buildCard(job) {
   const fb = feedbackData[job.id] || {};
   const isDone = fb.done || false;
-  const feedbackText = fb.feedback || '';
   const doneBy = fb.submitted_by || '';
 
   const card = document.createElement('div');
@@ -669,12 +697,40 @@ function buildCard(job) {
   const doneByHtml = (isDone && doneBy)
     ? `<span class="done-by">Marked done by ${esc(doneBy)}</span>` : '';
 
-  const fbPhoto = fb.photo || '';
-  const fbPhotoHtml = fbPhoto
-    ? (isVideo(fbPhoto)
-        ? `<video class="edit-photo-preview" src="${esc(fbPhoto)}" controls style="margin-top:6px"></video>`
-        : `<img class="edit-photo-preview" src="${esc(fbPhoto)}" alt="Completion photo" style="margin-top:6px;cursor:pointer" onclick="openLightbox('${esc(fbPhoto)}')">`)
-    : '';
+  const jobComments = commentsData[job.id] || [];
+  const threadHtml = jobComments.length
+    ? jobComments.map(c => {
+        const author = c.submitted_by ? esc(c.submitted_by) : 'Anonymous';
+        const mediaHtml = c.photo
+          ? (isVideo(c.photo)
+              ? `<video class="comment-vid" src="${esc(c.photo)}" controls preload="none"></video>`
+              : `<img class="comment-img" src="${esc(c.photo)}" alt="Comment photo" onclick="openLightbox('${esc(c.photo)}')">`)
+          : '';
+        const textHtml = c.comment ? `<div class="comment-text">${esc(c.comment)}</div>` : '';
+        return `<div class="comment-entry">
+          <div class="comment-meta">
+            <span class="comment-author">${author}</span>
+            <span class="comment-time">${timeAgo(c.created_at)}</span>
+          </div>
+          ${textHtml}${mediaHtml}
+        </div>`;
+      }).join('')
+    : '<div class="no-comments">No comments yet — be the first to add one.</div>';
+
+  const commentsHtml = `<div class="comments-section">
+    <div class="comments-label">Comments</div>
+    <div class="comment-thread">${threadHtml}</div>
+    <div class="comment-add">
+      <textarea class="comment-input" id="cmnt-input-${esc(job.id)}" rows="2" placeholder="Add a comment..."></textarea>
+      <div class="comment-action-row">
+        <button class="comment-post-btn" onclick="postComment('${esc(job.id)}')">Post</button>
+        <label class="edit-upload-label" for="cmnt-photo-${esc(job.id)}" style="font-size:11px;padding:5px 10px">📷 Photo / Video</label>
+        <input type="file" id="cmnt-photo-${esc(job.id)}" accept="image/*,video/*" style="display:none" onchange="stageCmntPhoto('${esc(job.id)}', this)">
+        <span class="comment-status" id="cmnt-status-${esc(job.id)}"></span>
+      </div>
+      <div id="cmnt-preview-${esc(job.id)}"></div>
+    </div>
+  </div>`;
 
   const editPriority = job.priority || '';
   const editSafety = job.safety_concern || '';
@@ -779,19 +835,7 @@ function buildCard(job) {
         ${doneByHtml}
         <button class="edit-btn" onclick="openEditPanel('${esc(job.id)}')">✏️ Edit</button>
       </div>
-      <div class="feedback-wrap">
-        <div class="feedback-label">Notes / Feedback</div>
-        <textarea class="feedback-input" id="feedback-${esc(job.id)}"
-          placeholder="Add any notes about this job — what you did, what's still needed...">${esc(feedbackText)}</textarea>
-        ${fbPhotoHtml}
-        <div id="fb-photo-preview-${esc(job.id)}"></div>
-        <div class="feedback-save-row" style="flex-wrap:wrap;gap:6px">
-          <button class="save-btn" onclick="saveFeedback('${esc(job.id)}')">Save Notes</button>
-          <label class="edit-upload-label" for="fb-photo-file-${esc(job.id)}" style="font-size:11px;padding:5px 10px">📷 ${fbPhoto ? 'Replace photo' : 'Add photo / video'}</label>
-          <input type="file" id="fb-photo-file-${esc(job.id)}" accept="image/*,video/*" style="display:none" onchange="stageFeedbackPhoto('${esc(job.id)}', this)">
-          <span class="save-status" id="save-status-${esc(job.id)}">✓ Saved</span>
-        </div>
-      </div>
+      ${commentsHtml}
       ${editPanelHtml}
     </div>`;
 
@@ -874,61 +918,74 @@ async function toggleDone(jobId, done) {
   }
 }
 
-// ── Feedback ─────────────────────────────────────────────────
-function stageFeedbackPhoto(jobId, input) {
+// ── Comments ──────────────────────────────────────────────────
+function timeAgo(ts) {
+  if (!ts) return '';
+  const diff = Date.now() - new Date(ts).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(ts).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
+}
+
+function stageCmntPhoto(jobId, input) {
   const file = input.files[0];
   if (!file) return;
-  feedbackPhotoFiles[jobId] = file;
-  const preview = document.getElementById(`fb-photo-preview-${jobId}`);
+  commentPhotoFiles[jobId] = file;
+  const preview = document.getElementById(`cmnt-preview-${jobId}`);
   if (!preview) return;
   const url = URL.createObjectURL(file);
   if (isVideo(file.name)) {
-    preview.innerHTML = `<video class="edit-photo-preview" src="${url}" controls style="margin-top:6px"></video>`;
+    preview.innerHTML = `<video class="comment-vid" src="${url}" controls preload="none" style="margin-top:4px"></video>`;
   } else {
-    preview.innerHTML = `<img class="edit-photo-preview" src="${url}" alt="Photo preview" style="margin-top:6px">`;
+    preview.innerHTML = `<img class="comment-img" src="${url}" alt="Preview" style="margin-top:4px">`;
   }
 }
 
-async function saveFeedback(jobId) {
+async function postComment(jobId) {
   const name = document.getElementById('volunteer-name').value.trim() || null;
-  const textarea = document.getElementById(`feedback-${jobId}`);
-  const feedback = textarea ? textarea.value : '';
-  const btn = textarea?.closest('.job-footer')?.querySelector('.save-btn');
-  const statusEl = document.getElementById(`save-status-${jobId}`);
+  const inputEl = document.getElementById(`cmnt-input-${jobId}`);
+  const comment = inputEl ? inputEl.value.trim() : '';
+  const btn = inputEl?.closest('.comment-add')?.querySelector('.comment-post-btn');
+  const statusEl = document.getElementById(`cmnt-status-${jobId}`);
+
+  if (!comment && !commentPhotoFiles[jobId]) {
+    if (statusEl) { statusEl.textContent = 'Add a comment or photo first.'; statusEl.style.color = 'var(--red)'; }
+    return;
+  }
 
   if (btn) btn.disabled = true;
+  if (statusEl) { statusEl.textContent = 'Posting...'; statusEl.style.color = 'var(--ink-mid)'; }
 
   try {
     let photoUrl;
-    const pendingFile = feedbackPhotoFiles[jobId];
+    const pendingFile = commentPhotoFiles[jobId];
     if (pendingFile) {
-      if (statusEl) { statusEl.textContent = 'Uploading...'; statusEl.classList.add('visible'); }
+      if (statusEl) statusEl.textContent = 'Uploading...';
       photoUrl = await uploadJobPhoto(pendingFile);
-      delete feedbackPhotoFiles[jobId];
+      delete commentPhotoFiles[jobId];
     }
 
-    const body = { feedback, submitted_by: name };
-    if (photoUrl) body.photo = photoUrl;
-
-    await fetch(`${API}/surf/jobs/${encodeURIComponent(jobId)}/feedback`, {
+    const res = await fetch(`${API}/surf/jobs/${encodeURIComponent(jobId)}/comments`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
+      body: JSON.stringify({ comment, photo: photoUrl || null, submitted_by: name })
     });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'Post failed');
 
-    if (!feedbackData[jobId]) feedbackData[jobId] = {};
-    feedbackData[jobId].feedback = feedback;
-    if (photoUrl) feedbackData[jobId].photo = photoUrl;
+    if (!commentsData[jobId]) commentsData[jobId] = [];
+    commentsData[jobId].push(data.comment);
 
-    if (statusEl) {
-      statusEl.textContent = '✓ Saved';
-      statusEl.style.color = '';
-      statusEl.classList.add('visible');
-      setTimeout(() => statusEl.classList.remove('visible'), 2500);
-    }
-  } catch {
-    if (statusEl) { statusEl.textContent = '✗ Could not save'; statusEl.style.color = '#c0392b'; statusEl.classList.add('visible'); }
-  } finally {
+    const card = document.querySelector(`.job-card[data-id="${jobId}"]`);
+    if (card) card.replaceWith(buildCard(allJobs.find(j => j.id === jobId)));
+
+  } catch (err) {
+    if (statusEl) { statusEl.textContent = '✗ ' + (err.message || 'Could not post'); statusEl.style.color = 'var(--red)'; }
     if (btn) btn.disabled = false;
   }
 }
