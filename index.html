@@ -441,10 +441,12 @@
     .comment-post-btn:disabled { opacity: 0.5; cursor: not-allowed; }
     .comment-status { font-size: 11px; color: var(--green); }
     .no-comments { font-size: 11px; color: #bbb; font-style: italic; padding: 4px 0 8px; }
-    .comment-actions { margin-left: auto; display: flex; gap: 8px; flex-shrink: 0; }
-    .comment-action-btn { background: none; border: 1px solid var(--stone); border-radius: 4px; font-size: 11px; color: var(--ink-mid); cursor: pointer; padding: 2px 8px; font-family: var(--font); transition: all 0.12s; }
-    .comment-action-btn:hover { background: var(--cream-dark); }
-    .comment-action-btn.delete:hover { background: var(--red-light); color: var(--red); border-color: #fecaca; }
+    .comment-actions { display: flex; gap: 8px; margin-top: 8px; }
+    .comment-action-btn { display: inline-flex; align-items: center; gap: 5px; padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: var(--font); transition: all 0.15s; border: none; }
+    .comment-action-btn.edit { background: var(--cream-dark); color: var(--ink-mid); border: 1px solid var(--stone); }
+    .comment-action-btn.edit:hover { background: var(--stone); color: var(--ink); }
+    .comment-action-btn.delete { background: var(--red-light); color: var(--red); border: 1px solid #fecaca; }
+    .comment-action-btn.delete:hover { background: #fecaca; }
     .comment-edit-input { width: 100%; padding: 6px 8px; border: 1px solid var(--maroon); border-radius: 5px; font-size: 12px; font-family: var(--font); resize: none; min-height: 48px; color: var(--ink); background: #fff; margin-top: 4px; }
     .comment-edit-input:focus { outline: none; }
     .comment-edit-actions { display: flex; gap: 6px; margin-top: 5px; }
@@ -732,18 +734,15 @@ function buildCard(job) {
                <button class="comment-post-btn" onclick="saveEditComment(${c.id}, '${esc(job.id)}')">Save</button>
                <button class="comment-cancel-btn" onclick="cancelEditComment('${esc(job.id)}')">Cancel</button>
              </div>`
-          : `${c.comment ? `<div class="comment-text">${esc(c.comment)}</div>` : ''}${mediaHtml}`;
-        const actionsHtml = !isEditing
-          ? `<span class="comment-actions">
-               <button class="comment-action-btn" onclick="startEditComment(${c.id}, '${esc(job.id)}')">Edit</button>
-               <button class="comment-action-btn delete" onclick="deleteComment(${c.id}, '${esc(job.id)}')">Delete</button>
-             </span>`
-          : '';
+          : `${c.comment ? `<div class="comment-text">${esc(c.comment)}</div>` : ''}${mediaHtml}
+             <div class="comment-actions">
+               <button class="comment-action-btn edit" onclick="startEditComment(${c.id}, '${esc(job.id)}')">✏️ Edit comment</button>
+               <button class="comment-action-btn delete" onclick="deleteComment(${c.id}, '${esc(job.id)}')">🗑️ Delete</button>
+             </div>`;
         return `<div class="comment-entry">
           <div class="comment-meta">
             <span class="comment-author">${author}</span>
             <span class="comment-time">${timeAgo(c.created_at)}</span>
-            ${actionsHtml}
           </div>
           ${contentHtml}
         </div>`;
