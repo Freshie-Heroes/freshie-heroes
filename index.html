@@ -758,9 +758,9 @@ function buildCard(job) {
         <label>Priority</label>
         <select id="edit-priority-${esc(job.id)}">
           <option value="">— Not set —</option>
-          <option value="High"${editPriority === 'High' ? ' selected' : ''}>High</option>
-          <option value="Medium"${editPriority === 'Medium' ? ' selected' : ''}>Medium</option>
-          <option value="Low"${editPriority === 'Low' ? ' selected' : ''}>Low</option>
+          <option value="High"${editPriority === 'High' ? ' selected' : ''}>🔴 High</option>
+          <option value="Medium"${editPriority === 'Medium' ? ' selected' : ''}>🟠 Medium</option>
+          <option value="Low"${editPriority === 'Low' ? ' selected' : ''}>🟢 Low</option>
         </select>
       </div>
       <div class="edit-row">
@@ -775,7 +775,7 @@ function buildCard(job) {
         <label>Safety concern</label>
         <select id="edit-safety-${esc(job.id)}">
           <option value="No"${editSafety !== 'Yes' ? ' selected' : ''}>No</option>
-          <option value="Yes"${editSafety === 'Yes' ? ' selected' : ''}>Yes</option>
+          <option value="Yes"${editSafety === 'Yes' ? ' selected' : ''}>⚠️ Yes</option>
         </select>
       </div>
       <div class="edit-row">
