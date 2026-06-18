@@ -126,6 +126,15 @@
       color: var(--ink);
     }
     .filter-select:focus { outline: none; border-color: var(--maroon); }
+    .multi-select-wrap { position: relative; }
+    .multi-select-btn { display: flex; align-items: center; gap: 6px; padding: 9px 10px; border: 1px solid var(--stone); border-radius: 7px; font-size: 13px; font-family: var(--font); background: #fff; color: var(--ink); cursor: pointer; white-space: nowrap; }
+    .multi-select-btn.active { border-color: var(--maroon); }
+    .multi-select-arrow { font-size: 10px; color: var(--ink-mid); margin-left: auto; }
+    .multi-select-dropdown { display: none; position: absolute; top: calc(100% + 4px); left: 0; background: #fff; border: 1px solid var(--stone); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.10); z-index: 100; min-width: 160px; padding: 6px 0; }
+    .multi-select-dropdown.open { display: block; }
+    .multi-select-option { display: flex; align-items: center; gap: 8px; padding: 8px 14px; font-size: 13px; font-family: var(--font); color: var(--ink); cursor: pointer; }
+    .multi-select-option:hover { background: var(--cream); }
+    .multi-select-option input { accent-color: var(--maroon); width: 15px; height: 15px; cursor: pointer; margin: 0; }
     .toggle-done {
       padding: 9px 14px;
       border: 1px solid var(--stone);
@@ -502,6 +511,7 @@
     @media (max-width: 600px) {
       .controls { gap: 8px; }
       .filter-select { font-size: 12px; }
+      .multi-select-btn { font-size: 12px; }
       .job-photo-wrap { padding-left: 16px; }
       .job-notes { padding-left: 16px; }
       .job-date { padding-left: 16px; }
@@ -547,13 +557,18 @@
     <option value="Gardening">🌿 Gardening</option>
     <option value="Repair/Paint">🔧🎨 Repair/Paint</option>
   </select>
-  <select class="filter-select" id="filter-responsible" onchange="applyFilters()">
-    <option value="">👥 All responsible</option>
-    <option value="Club">🏄 Club</option>
-    <option value="Council">🏛️ Council</option>
-    <option value="Trades">🔨 Trades</option>
-    <option value="Working Bee">🐝 Working Bee</option>
-  </select>
+  <div class="multi-select-wrap" id="resp-wrap">
+    <button class="multi-select-btn" id="resp-btn" onclick="toggleRespDropdown(event)">
+      <span id="resp-label">👥 All responsible</span>
+      <span class="multi-select-arrow">▾</span>
+    </button>
+    <div class="multi-select-dropdown" id="resp-dropdown">
+      <label class="multi-select-option"><input type="checkbox" value="Club" onchange="updateRespFilter()"> 🏄 Club</label>
+      <label class="multi-select-option"><input type="checkbox" value="Council" onchange="updateRespFilter()"> 🏛️ Council</label>
+      <label class="multi-select-option"><input type="checkbox" value="Trades" onchange="updateRespFilter()"> 🔨 Trades</label>
+      <label class="multi-select-option"><input type="checkbox" value="Working Bee" onchange="updateRespFilter()"> 🐝 Working Bee</label>
+    </div>
+  </div>
   <button class="toggle-done" id="toggle-done-btn" onclick="toggleShowDone()">Hide Completed</button>
 </div>
 
@@ -886,12 +901,42 @@ function renderStats() {
   `;
 }
 
+// ── Responsible multi-select ─────────────────────────────────
+function toggleRespDropdown(e) {
+  e.stopPropagation();
+  const dd = document.getElementById('resp-dropdown');
+  const btn = document.getElementById('resp-btn');
+  const isOpen = dd.classList.toggle('open');
+  btn.classList.toggle('active', isOpen);
+}
+
+function updateRespFilter() {
+  const checked = [...document.querySelectorAll('#resp-dropdown input:checked')].map(el => el.value);
+  const label = document.getElementById('resp-label');
+  if (checked.length === 0) {
+    label.textContent = '👥 All responsible';
+  } else if (checked.length === 1) {
+    label.textContent = checked[0];
+  } else {
+    label.textContent = `${checked.length} selected`;
+  }
+  applyFilters();
+}
+
+document.addEventListener('click', e => {
+  const wrap = document.getElementById('resp-wrap');
+  if (wrap && !wrap.contains(e.target)) {
+    document.getElementById('resp-dropdown').classList.remove('open');
+    document.getElementById('resp-btn').classList.remove('active');
+  }
+});
+
 // ── Filters ──────────────────────────────────────────────────
 function applyFilters() {
   const search = document.getElementById('search').value.toLowerCase();
   const priority = document.getElementById('filter-priority').value;
   const category = document.getElementById('filter-category').value;
-  const responsible = document.getElementById('filter-responsible').value;
+  const respSelected = [...document.querySelectorAll('#resp-dropdown input:checked')].map(el => el.value);
 
   document.querySelectorAll('.job-card').forEach(card => {
     const job = allJobs.find(j => j.id === card.dataset.id);
@@ -906,7 +951,7 @@ function applyFilters() {
       (job.notes || '').toLowerCase().includes(search);
     const matchPriority = !priority || job.priority === priority;
     const matchCategory = !category || job.category === category;
-    const matchResponsible = !responsible || job.responsible === responsible;
+    const matchResponsible = respSelected.length === 0 || respSelected.includes(job.responsible);
 
     card.classList.toggle('hidden', !(matchSearch && matchPriority && matchCategory && matchResponsible));
   });
