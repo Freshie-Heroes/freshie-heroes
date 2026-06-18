@@ -1078,11 +1078,8 @@ async function toggleDone(jobId, done) {
     feedbackData[jobId].done = done;
     feedbackData[jobId].submitted_by = name;
 
-    if (card) {
-      card.classList.toggle('is-done', done);
-      const title = card.querySelector('.job-title');
-      if (title) title.style.textDecoration = done ? 'line-through' : '';
-    }
+    const job = allJobs.find(j => j.id === jobId);
+    if (card && job) card.replaceWith(buildCard(job));
     renderStats();
     applyFilters();
   } catch {
