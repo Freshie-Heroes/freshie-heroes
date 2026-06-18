@@ -105,7 +105,7 @@
     <img src="logo.png" alt="Freshie Heros">
     <div>
       <h1>Freshie Heros</h1>
-      <p>Job Board — Update Jobs</p>
+      <p>Job Board — Add / Update Jobs</p>
     </div>
   </div>
 
@@ -121,18 +121,18 @@
   <input type="file" id="csv-file" accept=".csv" style="display:none">
   <div class="file-chosen" id="file-chosen" style="display:none"></div>
 
-  <button class="upload-btn" id="upload-btn" onclick="doUpload()">Upload and Update Job Board</button>
+  <button class="upload-btn" id="upload-btn" onclick="doUpload()">Upload and Add / Update Jobs</button>
 
   <div class="result" id="result"></div>
 
   <div class="instructions">
-    <h3>How to update the job board</h3>
+    <h3>How to add or update jobs</h3>
     <ol>
-      <li>Open the Excel spreadsheet</li>
+      <li>In Excel, keep only the rows you want to add or update — or upload the whole sheet</li>
       <li>Go to <code>File → Save As</code> and choose <code>CSV (Comma delimited)</code></li>
       <li>Enter the password above</li>
       <li>Choose the CSV file you just saved</li>
-      <li>Click Upload — the job board updates instantly</li>
+      <li>Click Upload — new jobs are added, existing jobs are updated, nothing else is touched</li>
     </ol>
   </div>
 
