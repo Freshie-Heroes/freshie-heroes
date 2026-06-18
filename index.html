@@ -450,6 +450,11 @@
     .comment-post-btn:disabled { opacity: 0.5; cursor: not-allowed; }
     .comment-status { font-size: 11px; color: var(--green); }
     .no-comments { font-size: 11px; color: #bbb; font-style: italic; padding: 4px 0 8px; }
+    .photo-picker-wrap { position: relative; display: inline-block; }
+    .photo-picker-menu { display: none; position: absolute; bottom: calc(100% + 6px); left: 0; background: #fff; border: 1px solid var(--stone); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.12); z-index: 200; min-width: 180px; padding: 4px 0; white-space: nowrap; }
+    .photo-picker-menu.open { display: block; }
+    .photo-picker-opt { display: flex; align-items: center; gap: 9px; padding: 9px 14px; font-size: 13px; font-family: var(--font); color: var(--ink); cursor: pointer; }
+    .photo-picker-opt:hover { background: var(--cream); }
     .comment-actions { display: flex; gap: 8px; margin-top: 8px; }
     .comment-action-btn { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; border-radius: 5px; font-size: 11px; font-weight: 600; cursor: pointer; font-family: var(--font); transition: all 0.15s; border: none; }
     .comment-action-btn.edit { background: var(--cream-dark); color: var(--ink-mid); border: 1px solid var(--stone); }
@@ -793,8 +798,15 @@ function buildCard(job) {
       <textarea class="comment-input" id="cmnt-input-${esc(job.id)}" rows="2" placeholder="Add a comment..."></textarea>
       <div class="comment-action-row">
         <button class="comment-post-btn" onclick="postComment('${esc(job.id)}')">Post</button>
-        <label class="edit-upload-label" for="cmnt-photo-${esc(job.id)}" style="font-size:11px;padding:5px 10px">📷 Photo / Video</label>
-        <input type="file" id="cmnt-photo-${esc(job.id)}" accept="image/*,video/*" style="display:none" onchange="stageCmntPhoto('${esc(job.id)}', this)">
+        <div class="photo-picker-wrap" id="cmnt-picker-wrap-${esc(job.id)}">
+          <button class="edit-upload-label" style="font-size:11px;padding:5px 10px;cursor:pointer;border:none;" onclick="togglePhotoPicker(event,'cmnt-picker-menu-${esc(job.id)}')">📷 Photo / Video</button>
+          <div class="photo-picker-menu" id="cmnt-picker-menu-${esc(job.id)}">
+            <label class="photo-picker-opt" for="cmnt-photo-cam-${esc(job.id)}">📷 Take photo or video</label>
+            <label class="photo-picker-opt" for="cmnt-photo-${esc(job.id)}">🖼️ Choose from library</label>
+          </div>
+          <input type="file" id="cmnt-photo-cam-${esc(job.id)}" accept="image/*,video/*" capture="environment" style="display:none" onchange="stageCmntPhoto('${esc(job.id)}', this)">
+          <input type="file" id="cmnt-photo-${esc(job.id)}" accept="image/*,video/*" style="display:none" onchange="stageCmntPhoto('${esc(job.id)}', this)">
+        </div>
         <span class="comment-status" id="cmnt-status-${esc(job.id)}"></span>
       </div>
       <div id="cmnt-preview-${esc(job.id)}"></div>
@@ -867,8 +879,15 @@ function buildCard(job) {
       <div class="edit-row">
         <label>Photo / Video</label>
         ${currentPhotoHtml}
-        <label class="edit-upload-label" for="edit-photo-file-${esc(job.id)}">📷 Take or choose photo / video</label>
-        <input type="file" id="edit-photo-file-${esc(job.id)}" accept="image/*,video/*" style="display:none" onchange="previewEditPhoto('${esc(job.id)}', this)">
+        <div class="photo-picker-wrap" id="edit-picker-wrap-${esc(job.id)}">
+          <button class="edit-upload-label" style="cursor:pointer;border:none;" onclick="togglePhotoPicker(event,'edit-picker-menu-${esc(job.id)}')">📷 Photo / Video</button>
+          <div class="photo-picker-menu" id="edit-picker-menu-${esc(job.id)}">
+            <label class="photo-picker-opt" for="edit-photo-cam-${esc(job.id)}">📷 Take photo or video</label>
+            <label class="photo-picker-opt" for="edit-photo-file-${esc(job.id)}">🖼️ Choose from library</label>
+          </div>
+          <input type="file" id="edit-photo-cam-${esc(job.id)}" accept="image/*,video/*" capture="environment" style="display:none" onchange="previewEditPhoto('${esc(job.id)}', this)">
+          <input type="file" id="edit-photo-file-${esc(job.id)}" accept="image/*,video/*" style="display:none" onchange="previewEditPhoto('${esc(job.id)}', this)">
+        </div>
         <div id="edit-photo-new-${esc(job.id)}"></div>
       </div>
       <div id="edit-status-${esc(job.id)}" style="font-size:11px;text-align:center;min-height:16px"></div>
@@ -1298,6 +1317,19 @@ function fmtDate(d) {
   if (!d) return '';
   return new Date(d).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
 }
+
+// ── Photo picker popover ──────────────────────────────────────
+function togglePhotoPicker(e, menuId) {
+  e.stopPropagation();
+  document.querySelectorAll('.photo-picker-menu.open').forEach(m => {
+    if (m.id !== menuId) m.classList.remove('open');
+  });
+  document.getElementById(menuId).classList.toggle('open');
+}
+
+document.addEventListener('click', () => {
+  document.querySelectorAll('.photo-picker-menu.open').forEach(m => m.classList.remove('open'));
+});
 
 // ── Completed Jobs Print ──────────────────────────────────────
 function printCompletedReport() {
