@@ -464,7 +464,6 @@
 
 <script>
 const API = 'https://batur-core-production.up.railway.app';
-const JOBS_URL = 'jobs.json';
 
 let allJobs = [];
 let feedbackData = {}; // job_id → { done, feedback, submitted_by, updated_at }
@@ -478,13 +477,14 @@ let showDone = true;
 
   try {
     const [jobsRes, feedbackRes] = await Promise.all([
-      fetch(JOBS_URL),
+      fetch(`${API}/surf/jobs-list`),
       fetch(`${API}/surf/jobs`)
     ]);
     loadBar(70);
 
     const jobsData = await jobsRes.json();
-    allJobs = jobsData.jobs || [];
+    // normalise job_id → id for compatibility with card rendering
+    allJobs = (jobsData.jobs || []).map(j => ({ ...j, id: j.job_id }));
 
     if (jobsData.updated) {
       const d = new Date(jobsData.updated);

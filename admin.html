@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Freshie Heros — Upload Jobs</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #F5F0E8;
+      color: #2C2C2A;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 36px 32px;
+      max-width: 480px;
+      width: 100%;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+    }
+    .logo-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+    .logo-row img { width: 52px; height: 52px; border-radius: 8px; object-fit: cover; }
+    .logo-row h1 { font-size: 20px; font-weight: 700; color: #7B1A1A; }
+    .logo-row p { font-size: 13px; color: #888; margin-top: 2px; }
+    label { display: block; font-size: 13px; font-weight: 600; color: #5a5a58; margin-bottom: 6px; margin-top: 20px; }
+    input[type="password"], input[type="file"] {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid #D3CFC7;
+      border-radius: 8px;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input[type="password"]:focus, input[type="file"]:focus { border-color: #7B1A1A; }
+    .drop-zone {
+      border: 2px dashed #D3CFC7;
+      border-radius: 10px;
+      padding: 32px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 8px;
+    }
+    .drop-zone.drag-over { border-color: #7B1A1A; background: #fdf5f5; }
+    .drop-zone .icon { font-size: 32px; margin-bottom: 10px; }
+    .drop-zone p { color: #888; font-size: 14px; }
+    .drop-zone strong { color: #7B1A1A; }
+    .file-chosen { margin-top: 10px; font-size: 13px; color: #2d6a2d; font-weight: 600; }
+    .upload-btn {
+      width: 100%;
+      margin-top: 24px;
+      padding: 14px;
+      background: #7B1A1A;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .upload-btn:hover:not(:disabled) { background: #5a1212; }
+    .upload-btn:disabled { background: #bbb; cursor: not-allowed; }
+    .result {
+      margin-top: 18px;
+      padding: 14px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      display: none;
+    }
+    .result.success { background: #e8f5e8; color: #2d6a2d; display: block; }
+    .result.error { background: #fef2f2; color: #b91c1c; display: block; }
+    .instructions {
+      margin-top: 28px;
+      padding-top: 24px;
+      border-top: 1px solid #ebe4d6;
+    }
+    .instructions h3 { font-size: 14px; font-weight: 700; color: #5a5a58; margin-bottom: 12px; }
+    .instructions ol { padding-left: 18px; }
+    .instructions li { font-size: 13px; color: #5a5a58; margin-bottom: 6px; line-height: 1.5; }
+    .instructions code { background: #f0ebe0; padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+    .back-link { margin-top: 20px; text-align: center; }
+    .back-link a { color: #7B1A1A; font-size: 14px; text-decoration: none; font-weight: 600; }
+    .back-link a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <div class="logo-row">
+    <img src="logo.png" alt="Freshie Heros">
+    <div>
+      <h1>Freshie Heros</h1>
+      <p>Job Board — Update Jobs</p>
+    </div>
+  </div>
+
+  <label for="password">Admin Password</label>
+  <input type="password" id="password" placeholder="Enter password">
+
+  <label>Upload CSV File</label>
+  <div class="drop-zone" id="drop-zone" onclick="document.getElementById('csv-file').click()">
+    <div class="icon">📄</div>
+    <p><strong>Click to choose</strong> or drag and drop your CSV here</p>
+    <p style="margin-top:6px;font-size:12px;">Export from Excel: File → Save As → CSV</p>
+  </div>
+  <input type="file" id="csv-file" accept=".csv" style="display:none">
+  <div class="file-chosen" id="file-chosen" style="display:none"></div>
+
+  <button class="upload-btn" id="upload-btn" onclick="doUpload()">Upload and Update Job Board</button>
+
+  <div class="result" id="result"></div>
+
+  <div class="instructions">
+    <h3>How to update the job board</h3>
+    <ol>
+      <li>Open the Excel spreadsheet</li>
+      <li>Go to <code>File → Save As</code> and choose <code>CSV (Comma delimited)</code></li>
+      <li>Enter the password above</li>
+      <li>Choose the CSV file you just saved</li>
+      <li>Click Upload — the job board updates instantly</li>
+    </ol>
+  </div>
+
+  <div class="back-link">
+    <a href="index.html">← Back to Job Board</a>
+  </div>
+</div>
+
+<script>
+const API = 'https://batur-core-production.up.railway.app';
+let selectedFile = null;
+
+const dropZone = document.getElementById('drop-zone');
+const fileInput = document.getElementById('csv-file');
+const fileChosen = document.getElementById('file-chosen');
+
+fileInput.addEventListener('change', () => {
+  if (fileInput.files[0]) selectFile(fileInput.files[0]);
+});
+
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) selectFile(file);
+});
+
+function selectFile(file) {
+  selectedFile = file;
+  fileChosen.textContent = '✓ ' + file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)';
+  fileChosen.style.display = 'block';
+  dropZone.style.borderColor = '#2d6a2d';
+}
+
+async function doUpload() {
+  const password = document.getElementById('password').value.trim();
+  const result = document.getElementById('result');
+  const btn = document.getElementById('upload-btn');
+
+  result.className = 'result';
+  result.style.display = 'none';
+
+  if (!password) { showResult('error', 'Please enter the admin password.'); return; }
+  if (!selectedFile) { showResult('error', 'Please choose a CSV file first.'); return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Uploading...';
+
+  const form = new FormData();
+  form.append('password', password);
+  form.append('csv', selectedFile);
+
+  try {
+    const res = await fetch(`${API}/surf/upload`, { method: 'POST', body: form });
+    const data = await res.json();
+    if (data.success) {
+      showResult('success', `✓ ${data.message}`);
+      selectedFile = null;
+      fileInput.value = '';
+      fileChosen.style.display = 'none';
+      dropZone.style.borderColor = '#D3CFC7';
+    } else {
+      showResult('error', data.error || 'Upload failed.');
+    }
+  } catch {
+    showResult('error', 'Could not connect. Check your internet and try again.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Upload and Update Job Board';
+  }
+}
+
+function showResult(type, msg) {
+  const el = document.getElementById('result');
+  el.className = 'result ' + type;
+  el.textContent = msg;
+}
+</script>
+</body>
+</html>
