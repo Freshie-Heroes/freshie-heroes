@@ -514,7 +514,7 @@ async function addSelectedJobs() {
   for (const cb of checked) {
     await fetch(`${API}/surf/plans/${currentPlan.id}/jobs`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ job_id: cb.value })
+      body: JSON.stringify({ job_id: cb.value, assigned_to: currentPlan.name })
     });
   }
   await refreshPlan();
