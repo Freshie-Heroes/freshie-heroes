@@ -81,18 +81,6 @@
     .volunteer-name-row small { font-weight: 400; color: var(--ink-light); }
     .volunteer-name-row input { padding: 8px 12px; border: 1.5px solid var(--stone); border-radius: 7px; font-size: 14px; font-family: inherit; outline: none; width: 220px; }
     .volunteer-name-row input:focus { border-color: var(--maroon); }
-    .selector-search { width: 100%; padding: 9px 12px; border: 1.5px solid var(--stone); border-radius: 7px; font-size: 14px; outline: none; margin-bottom: 10px; font-family: inherit; }
-    .selector-search:focus { border-color: var(--maroon); }
-    .selector-list { max-height: 260px; overflow-y: auto; border: 1px solid var(--cream-dark); border-radius: 7px; }
-    .selector-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--cream-dark); cursor: pointer; transition: background 0.1s; }
-    .selector-item:last-child { border-bottom: none; }
-    .selector-item:hover { background: var(--cream); }
-    .selector-item.already-added { opacity: 0.45; cursor: default; }
-    .selector-item input[type="checkbox"] { flex-shrink: 0; width: 16px; height: 16px; accent-color: var(--maroon); cursor: pointer; }
-    .selector-item-text { flex: 1; }
-    .selector-item-title { font-size: 14px; font-weight: 600; }
-    .selector-item-loc { font-size: 12px; color: var(--ink-light); }
-    .selector-add-btn { margin-top: 12px; }
 
     /* ── Plan job cards ── */
     .plan-jobs { display: flex; flex-direction: column; gap: 16px; }
@@ -243,6 +231,7 @@
         <div class="meta" id="detail-meta"></div>
       </div>
       <div class="detail-header-actions">
+        <button class="btn-primary btn-sm" onclick="goSelectJobs()">＋ Add Jobs</button>
         <button class="btn-secondary btn-sm" onclick="window.print()">🖨 Print</button>
         <button class="btn-secondary btn-sm" onclick="openEditPlanModal()">✏️ Edit Plan</button>
         <button class="btn-danger btn-sm" onclick="confirmDeletePlan()">🗑 Delete</button>
@@ -254,14 +243,6 @@
     <div class="volunteer-name-row no-print">
       <label>Your name <small>(used for progress updates)</small></label>
       <input type="text" id="volunteer-name" placeholder="e.g. Sarah" autocomplete="given-name">
-    </div>
-
-    <!-- Job selector -->
-    <div class="job-selector no-print">
-      <h3>Add Jobs to this Plan</h3>
-      <input class="selector-search" type="text" placeholder="Search jobs by title or location…" oninput="filterSelector(this.value)" id="selector-search">
-      <div class="selector-list" id="selector-list"></div>
-      <button class="btn-primary selector-add-btn" onclick="addSelectedJobs()">＋ Add Selected Jobs</button>
     </div>
 
     <!-- Job cards -->
@@ -303,6 +284,14 @@ let updatePhotoFiles = {};
 // ── Init ─────────────────────────────────────────────────────────────────────
 async function init() {
   await Promise.all([loadBoardJobs(), loadPlans()]);
+  const params = new URLSearchParams(window.location.search);
+  const openId = params.get('open');
+  if (openId) openPlan(openId);
+}
+
+function goSelectJobs() {
+  const name = encodeURIComponent(currentPlan.name);
+  window.location.href = `index.html?plan=${currentPlan.id}&planname=${name}`;
 }
 
 async function loadBoardJobs() {
@@ -345,16 +334,11 @@ function renderPlansList(plans) {
 // ── Plan detail ───────────────────────────────────────────────────────────────
 async function openPlan(id) {
   try {
-    const [planRes, boardRes] = await Promise.all([
-      fetch(`${API}/surf/plans/${id}`).then(r => r.json()),
-      allBoardJobs.length ? Promise.resolve(null) : fetch(`${API}/surf/jobs-list`).then(r => r.json())
-    ]);
-    if (boardRes && boardRes.success) allBoardJobs = boardRes.jobs || [];
+    const planRes = await fetch(`${API}/surf/plans/${id}`).then(r => r.json());
     currentPlan = planRes.plan;
     currentPlanJobs = planRes.jobs || [];
     showDetail();
     renderDetail();
-    renderSelector();
   } catch {
     alert('Could not load plan.');
   }
@@ -484,41 +468,6 @@ function buildChecklistItem(pjId, c) {
 }
 
 // ── Job selector ──────────────────────────────────────────────────────────────
-function renderSelector() {
-  filterSelector('');
-}
-
-function filterSelector(query) {
-  const q = query.toLowerCase();
-  const addedIds = new Set(currentPlanJobs.map(j => j.job_id));
-  const filtered = allBoardJobs.filter(j =>
-    !q || j.issue.toLowerCase().includes(q) || (j.location || '').toLowerCase().includes(q)
-  );
-  const el = document.getElementById('selector-list');
-  if (!filtered.length) { el.innerHTML = '<div style="padding:14px;font-size:13px;color:#aaa;text-align:center;">No jobs found</div>'; return; }
-  el.innerHTML = filtered.map(j => {
-    const added = addedIds.has(j.job_id);
-    return `<label class="selector-item${added ? ' already-added' : ''}">
-      <input type="checkbox" value="${esc(j.job_id)}" ${added ? 'disabled checked' : ''}>
-      <div class="selector-item-text">
-        <div class="selector-item-title">${esc(j.issue)}</div>
-        ${j.location ? `<div class="selector-item-loc">📍 ${esc(j.location)}</div>` : ''}
-      </div>
-    </label>`;
-  }).join('');
-}
-
-async function addSelectedJobs() {
-  const checked = [...document.querySelectorAll('#selector-list input[type="checkbox"]:checked:not(:disabled)')];
-  if (!checked.length) { alert('Tick at least one job to add.'); return; }
-  for (const cb of checked) {
-    await fetch(`${API}/surf/plans/${currentPlan.id}/jobs`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ job_id: cb.value, assigned_to: currentPlan.name })
-    });
-  }
-  await refreshPlan();
-}
 
 // ── Plan actions ──────────────────────────────────────────────────────────────
 async function saveAssigned(pjId) {

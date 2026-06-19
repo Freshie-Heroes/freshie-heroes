@@ -153,6 +153,21 @@
     .clear-filters-btn { padding: 9px 14px; border: 1.5px solid #f5c4b3; border-radius: 7px; font-size: 12px; font-weight: 600; background: #faece7; color: #7B1A1A; cursor: pointer; white-space: nowrap; transition: all 0.12s; }
     .clear-filters-btn:hover { background: #f5c4b3; }
 
+    /* ── Selection mode ── */
+    .selection-banner { display: none; position: sticky; top: 0; z-index: 200; background: var(--maroon); color: #fff; padding: 12px 20px; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .selection-banner.active { display: flex; }
+    .selection-banner-text { font-size: 14px; font-weight: 600; }
+    .selection-banner-name { font-weight: 700; }
+    .selection-banner-actions { display: flex; gap: 10px; }
+    .selection-add-btn { padding: 8px 18px; background: #fff; color: var(--maroon); border: none; border-radius: 7px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+    .selection-add-btn:disabled { opacity: 0.5; cursor: default; }
+    .selection-cancel-btn { padding: 8px 14px; background: transparent; color: #fff; border: 1.5px solid rgba(255,255,255,0.5); border-radius: 7px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
+    .select-job-row { display: none; padding: 8px 14px 0; align-items: center; gap: 10px; cursor: pointer; }
+    .selection-mode .select-job-row { display: flex; }
+    .select-job-cb { width: 20px; height: 20px; accent-color: var(--maroon); cursor: pointer; flex-shrink: 0; }
+    .select-job-label { font-size: 13px; font-weight: 600; color: var(--ink-mid); cursor: pointer; user-select: none; }
+    .selection-mode .job-card.selected-for-plan { border-color: var(--maroon); background: #fff5f5; }
+
     /* ── Name banner ── */
     .name-banner {
       max-width: 1100px;
@@ -672,6 +687,15 @@
   </div>
 </header>
 
+<!-- Selection mode banner -->
+<div class="selection-banner" id="selection-banner">
+  <div class="selection-banner-text">Selecting jobs for <span class="selection-banner-name" id="selection-plan-name"></span></div>
+  <div class="selection-banner-actions">
+    <button class="selection-add-btn" id="add-selected-btn" onclick="submitSelectedJobs()" disabled>＋ Add selected</button>
+    <button class="selection-cancel-btn" onclick="cancelSelection()">✕ Cancel</button>
+  </div>
+</div>
+
 <div class="controls">
   <div class="search-wrap">
     <span class="search-icon">🔍</span>
@@ -853,15 +877,65 @@
 const API = 'https://batur-core-production.up.railway.app';
 
 let allJobs = [];
-let feedbackData = {}; // job_id → { done, submitted_by, updated_at }
-let commentsData = {}; // job_id → [ { id, comment, photo, submitted_by, created_at }, ... ]
-let commentPhotoFiles = {}; // job_id → File (pending upload for new comment)
-let editingCommentId = null; // comment id currently being edited inline
-let notesEditingId = null;  // job id whose notes field is being edited inline
-let editPhotoFiles = {};    // jobId → File staged in edit panel
-let removePhotoFor = {};    // jobId → true when user wants to remove existing photo
+let feedbackData = {};
+let commentsData = {};
+let commentPhotoFiles = {};
+let editingCommentId = null;
+let notesEditingId = null;
+let editPhotoFiles = {};
+let removePhotoFor = {};
 let showDone = true;
 let showOnlyDone = false;
+
+// ── Selection mode ───────────────────────────────────────────
+let selectionMode = false;
+let selectionPlanId = null;
+let selectionPlanName = '';
+let selectedJobIds = new Set();
+
+function initSelectionMode() {
+  const params = new URLSearchParams(window.location.search);
+  selectionPlanId = params.get('plan');
+  selectionPlanName = params.get('planname') || 'plan';
+  if (!selectionPlanId) return;
+  selectionMode = true;
+  document.body.classList.add('selection-mode');
+  document.getElementById('selection-banner').classList.add('active');
+  document.getElementById('selection-plan-name').textContent = selectionPlanName;
+}
+
+function toggleSelectJob(jobId, cb) {
+  if (cb.checked) {
+    selectedJobIds.add(jobId);
+    document.querySelector(`.job-card[data-id="${CSS.escape(jobId)}"]`)?.classList.add('selected-for-plan');
+  } else {
+    selectedJobIds.delete(jobId);
+    document.querySelector(`.job-card[data-id="${CSS.escape(jobId)}"]`)?.classList.remove('selected-for-plan');
+  }
+  const btn = document.getElementById('add-selected-btn');
+  const n = selectedJobIds.size;
+  btn.textContent = n > 0 ? `＋ Add ${n} job${n !== 1 ? 's' : ''}` : '＋ Add selected';
+  btn.disabled = n === 0;
+}
+
+async function submitSelectedJobs() {
+  if (!selectedJobIds.size) return;
+  const btn = document.getElementById('add-selected-btn');
+  btn.textContent = 'Adding…';
+  btn.disabled = true;
+  for (const jobId of selectedJobIds) {
+    await fetch(`${API}/surf/plans/${selectionPlanId}/jobs`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ job_id: jobId, assigned_to: selectionPlanName })
+    });
+  }
+  window.location.href = `plans.html?open=${selectionPlanId}`;
+}
+
+function cancelSelection() {
+  window.location.href = `plans.html?open=${selectionPlanId}`;
+}
 
 // ── Boot ────────────────────────────────────────────────────
 (async function boot() {
@@ -932,6 +1006,7 @@ function render() {
 
   applyFilters();
   renderStats();
+  initSelectionMode();
 }
 
 const CATEGORY_MAP = {
@@ -1177,6 +1252,10 @@ function buildCard(job) {
     </div>`;
 
   card.innerHTML = `
+    <div class="select-job-row">
+      <input type="checkbox" class="select-job-cb" id="sel-${esc(job.id)}" onchange="toggleSelectJob('${esc(job.id)}', this)">
+      <label class="select-job-label" for="sel-${esc(job.id)}">Add to plan</label>
+    </div>
     <div class="job-header">
       <div class="job-number">#${esc(job.id)}</div>
       <div class="job-main">
