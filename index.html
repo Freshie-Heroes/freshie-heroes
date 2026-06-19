@@ -1163,8 +1163,7 @@ async function postComment(jobId) {
     if (!commentsData[jobId]) commentsData[jobId] = [];
     commentsData[jobId].push(data.comment);
 
-    const card = document.querySelector(`.job-card[data-id="${jobId}"]`);
-    if (card) card.replaceWith(buildCard(allJobs.find(j => j.id === jobId)));
+    rebuildCard(jobId);
 
   } catch (err) {
     if (statusEl) { statusEl.textContent = '✗ ' + (err.message || 'Could not post'); statusEl.style.color = 'var(--red)'; }
@@ -1174,14 +1173,12 @@ async function postComment(jobId) {
 
 function startEditComment(commentId, jobId) {
   editingCommentId = commentId;
-  const card = document.querySelector(`.job-card[data-id="${jobId}"]`);
-  if (card) card.replaceWith(buildCard(allJobs.find(j => j.id === jobId)));
+  rebuildCard(jobId);
 }
 
 function cancelEditComment(jobId) {
   editingCommentId = null;
-  const card = document.querySelector(`.job-card[data-id="${jobId}"]`);
-  if (card) card.replaceWith(buildCard(allJobs.find(j => j.id === jobId)));
+  rebuildCard(jobId);
 }
 
 async function saveEditComment(commentId, jobId) {
@@ -1201,8 +1198,7 @@ async function saveEditComment(commentId, jobId) {
       if (idx !== -1) arr[idx] = data.comment;
     }
     editingCommentId = null;
-    const card = document.querySelector(`.job-card[data-id="${jobId}"]`);
-    if (card) card.replaceWith(buildCard(allJobs.find(j => j.id === jobId)));
+    rebuildCard(jobId);
   } catch (err) {
     alert('Could not save: ' + (err.message || 'Unknown error'));
   }
@@ -1217,8 +1213,7 @@ async function deleteComment(commentId, jobId) {
     if (commentsData[jobId]) {
       commentsData[jobId] = commentsData[jobId].filter(c => c.id !== commentId);
     }
-    const card = document.querySelector(`.job-card[data-id="${jobId}"]`);
-    if (card) card.replaceWith(buildCard(allJobs.find(j => j.id === jobId)));
+    rebuildCard(jobId);
   } catch (err) {
     alert('Could not delete: ' + (err.message || 'Unknown error'));
   }
