@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Freshie Heroes — Working Group Plans</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --maroon: #7B1A1A;
+      --maroon-dark: #5a1212;
+      --cream: #FAF6F1;
+      --cream-dark: #EBE4D6;
+      --stone: #D3CFC7;
+      --ink: #2C2C2A;
+      --ink-mid: #5F5E5A;
+      --ink-light: #888780;
+      --terra: #D85A30;
+      --terra-light: #FAECE7;
+      --green: #2d6a2d;
+      --green-light: #e8f5e8;
+      --amber: #92400e;
+      --amber-light: #fffbeb;
+      --blue: #1a4f8a;
+      --blue-light: #e8f0fb;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--cream); color: var(--ink); min-height: 100vh; }
+
+    /* ── Top bar ── */
+    .topbar { background: var(--maroon); color: #fff; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .topbar-left { display: flex; align-items: center; gap: 12px; }
+    .topbar img { width: 36px; height: 36px; border-radius: 6px; object-fit: cover; }
+    .topbar h1 { font-size: 17px; font-weight: 700; }
+    .topbar p { font-size: 12px; opacity: 0.75; margin-top: 1px; }
+    .topbar a { color: #fff; font-size: 13px; font-weight: 600; text-decoration: none; opacity: 0.85; }
+    .topbar a:hover { opacity: 1; }
+
+    /* ── Layout ── */
+    .page { max-width: 900px; margin: 0 auto; padding: 24px 16px 60px; }
+
+    /* ── Plans list ── */
+    .plans-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+    .plans-header h2 { font-size: 20px; font-weight: 700; }
+    .btn-primary { padding: 10px 18px; background: var(--maroon); color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.2s; font-family: inherit; }
+    .btn-primary:hover { background: var(--maroon-dark); }
+    .btn-secondary { padding: 8px 14px; background: #fff; color: var(--ink-mid); border: 1.5px solid var(--stone); border-radius: 7px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; font-family: inherit; }
+    .btn-secondary:hover { border-color: var(--ink-mid); color: var(--ink); }
+    .btn-danger { padding: 8px 14px; background: #fff; color: #b91c1c; border: 1.5px solid #fecaca; border-radius: 7px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
+    .btn-danger:hover { background: #fef2f2; }
+    .btn-sm { padding: 5px 11px; font-size: 12px; }
+
+    .plan-card { background: #fff; border: 1.5px solid var(--stone); border-radius: 10px; padding: 16px 18px; margin-bottom: 12px; display: flex; align-items: center; gap: 14px; cursor: pointer; transition: border-color 0.15s; }
+    .plan-card:hover { border-color: var(--maroon); }
+    .plan-card-info { flex: 1; }
+    .plan-card-name { font-size: 16px; font-weight: 700; color: var(--ink); }
+    .plan-card-meta { font-size: 12px; color: var(--ink-light); margin-top: 3px; }
+    .plan-card-actions { display: flex; gap: 8px; }
+    .status-pill { display: inline-block; border-radius: 20px; padding: 3px 10px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+    .status-planning { background: var(--blue-light); color: var(--blue); }
+    .status-active { background: var(--terra-light); color: var(--terra); }
+    .status-complete { background: var(--green-light); color: var(--green); }
+
+    .empty-state { text-align: center; padding: 48px 20px; color: var(--ink-light); }
+    .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
+    .empty-state p { font-size: 15px; }
+
+    /* ── Plan detail ── */
+    #plan-detail { display: none; }
+    .detail-header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+    .detail-header-info { flex: 1; }
+    .detail-header h2 { font-size: 22px; font-weight: 700; }
+    .detail-header .meta { font-size: 13px; color: var(--ink-light); margin-top: 4px; }
+    .detail-header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    /* ── Job selector ── */
+    .job-selector { background: #fff; border: 1.5px solid var(--stone); border-radius: 10px; padding: 16px; margin-bottom: 20px; }
+    .job-selector h3 { font-size: 14px; font-weight: 700; margin-bottom: 12px; color: var(--ink-mid); text-transform: uppercase; letter-spacing: 0.04em; }
+    .selector-search { width: 100%; padding: 9px 12px; border: 1.5px solid var(--stone); border-radius: 7px; font-size: 14px; outline: none; margin-bottom: 10px; font-family: inherit; }
+    .selector-search:focus { border-color: var(--maroon); }
+    .selector-list { max-height: 260px; overflow-y: auto; border: 1px solid var(--cream-dark); border-radius: 7px; }
+    .selector-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--cream-dark); cursor: pointer; transition: background 0.1s; }
+    .selector-item:last-child { border-bottom: none; }
+    .selector-item:hover { background: var(--cream); }
+    .selector-item.already-added { opacity: 0.45; cursor: default; }
+    .selector-item input[type="checkbox"] { flex-shrink: 0; width: 16px; height: 16px; accent-color: var(--maroon); cursor: pointer; }
+    .selector-item-text { flex: 1; }
+    .selector-item-title { font-size: 14px; font-weight: 600; }
+    .selector-item-loc { font-size: 12px; color: var(--ink-light); }
+    .selector-add-btn { margin-top: 12px; }
+
+    /* ── Plan job cards ── */
+    .plan-jobs { display: flex; flex-direction: column; gap: 16px; }
+    .plan-job-card { background: #fff; border: 1.5px solid var(--stone); border-radius: 10px; overflow: hidden; }
+    .plan-job-card.status-done { border-color: #86efac; }
+    .plan-job-card.status-needs_followup { border-color: #fca5a5; }
+    .plan-job-card.status-in_progress { border-color: #93c5fd; }
+
+    .plan-job-header { padding: 14px 16px; border-bottom: 1px solid var(--cream-dark); display: flex; align-items: flex-start; gap: 10px; }
+    .plan-job-header-info { flex: 1; }
+    .plan-job-title { font-size: 15px; font-weight: 700; }
+    .plan-job-loc { font-size: 12px; color: var(--ink-light); margin-top: 2px; }
+    .plan-job-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+    .badge { display: inline-block; border-radius: 20px; padding: 2px 9px; font-size: 11px; font-weight: 700; border: 1px solid transparent; }
+    .badge-high { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
+    .badge-medium { background: #ffedd5; color: #9a3412; border-color: #fed7aa; }
+    .badge-low { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
+    .badge-safety { background: #fef9c3; color: #854d0e; border-color: #fde047; }
+
+    .plan-job-header-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+
+    .status-select { padding: 5px 8px; border: 1.5px solid var(--stone); border-radius: 6px; font-size: 12px; font-weight: 600; font-family: inherit; cursor: pointer; outline: none; background: #fff; }
+
+    /* ── Job body: two-column layout ── */
+    .plan-job-body { padding: 14px 16px; }
+    .plan-job-cols { display: flex; gap: 14px; align-items: flex-start; }
+    .plan-job-text { flex: 1; min-width: 0; }
+    .plan-job-photo-wrap { flex-shrink: 0; width: 130px; }
+    .plan-job-photo-wrap img, .plan-job-photo-wrap video { width: 130px; border-radius: 7px; border: 1px solid var(--stone); display: block; }
+    @media (max-width: 500px) {
+      .plan-job-cols { flex-direction: column; }
+      .plan-job-photo-wrap { width: 100%; }
+      .plan-job-photo-wrap img, .plan-job-photo-wrap video { width: 100%; max-height: 180px; object-fit: cover; }
+    }
+
+    .field-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-light); margin-bottom: 4px; margin-top: 10px; }
+    .field-label:first-child { margin-top: 0; }
+    .field-value { font-size: 13px; color: var(--ink); line-height: 1.5; }
+
+    /* ── Assigned to ── */
+    .assign-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+    .assign-input { flex: 1; padding: 7px 10px; border: 1.5px solid var(--stone); border-radius: 6px; font-size: 13px; font-family: inherit; outline: none; }
+    .assign-input:focus { border-color: var(--maroon); }
+    .assign-save-btn { padding: 7px 12px; background: var(--maroon); color: #fff; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; }
+
+    /* ── Checklist ── */
+    .checklist-section { margin-top: 12px; }
+    .checklist-item { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid var(--cream-dark); }
+    .checklist-item:last-child { border-bottom: none; }
+    .checklist-item input[type="checkbox"] { width: 15px; height: 15px; accent-color: var(--maroon); flex-shrink: 0; cursor: pointer; }
+    .checklist-item-text { flex: 1; font-size: 13px; }
+    .checklist-item-text.done { text-decoration: line-through; color: var(--ink-light); }
+    .checklist-delete-btn { background: none; border: none; cursor: pointer; color: var(--ink-light); font-size: 14px; padding: 0 2px; }
+    .checklist-delete-btn:hover { color: #b91c1c; }
+    .checklist-add-row { display: flex; gap: 8px; margin-top: 8px; }
+    .checklist-add-input { flex: 1; padding: 7px 10px; border: 1.5px solid var(--stone); border-radius: 6px; font-size: 13px; font-family: inherit; outline: none; }
+    .checklist-add-input:focus { border-color: var(--maroon); }
+
+    /* ── Progress updates ── */
+    .updates-section { border-top: 1px solid var(--cream-dark); padding: 14px 16px; }
+    .updates-section h4 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-light); margin-bottom: 10px; }
+    .update-entry { display: flex; gap: 10px; margin-bottom: 12px; align-items: flex-start; }
+    .update-entry-content { flex: 1; }
+    .update-meta { font-size: 11px; color: var(--ink-light); margin-bottom: 3px; }
+    .update-note { font-size: 13px; line-height: 1.5; }
+    .update-photo { margin-top: 6px; }
+    .update-photo img, .update-photo video { max-width: 140px; border-radius: 6px; border: 1px solid var(--stone); display: block; cursor: pointer; }
+    .update-delete-btn { background: none; border: none; cursor: pointer; color: var(--ink-light); font-size: 14px; padding: 0; margin-top: 2px; }
+    .update-delete-btn:hover { color: #b91c1c; }
+    .add-update-form { margin-top: 10px; }
+    .add-update-form textarea { width: 100%; padding: 8px 10px; border: 1.5px solid var(--stone); border-radius: 7px; font-size: 13px; font-family: inherit; resize: vertical; outline: none; min-height: 60px; }
+    .add-update-form textarea:focus { border-color: var(--maroon); }
+    .add-update-actions { display: flex; gap: 8px; margin-top: 6px; align-items: center; flex-wrap: wrap; }
+    .add-update-photo-label { padding: 7px 12px; background: var(--cream); border: 1.5px solid var(--stone); border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--ink-mid); }
+    .add-update-photo-label:hover { background: var(--cream-dark); }
+    .update-photo-preview { margin-top: 6px; font-size: 12px; color: var(--green); font-weight: 600; }
+
+    /* ── Modal ── */
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .modal { background: #fff; border-radius: 12px; padding: 28px 24px; max-width: 460px; width: 100%; }
+    .modal h3 { font-size: 18px; font-weight: 700; margin-bottom: 18px; }
+    .modal label { display: block; font-size: 12px; font-weight: 700; color: var(--ink-mid); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 5px; margin-top: 14px; }
+    .modal label:first-of-type { margin-top: 0; }
+    .modal input, .modal select { width: 100%; padding: 9px 12px; border: 1.5px solid var(--stone); border-radius: 7px; font-size: 14px; font-family: inherit; outline: none; }
+    .modal input:focus, .modal select:focus { border-color: var(--maroon); }
+    .modal-actions { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
+
+    /* ── Print ── */
+    @media print {
+      .topbar, .no-print { display: none !important; }
+      body { background: #fff; }
+      .page { padding: 0; max-width: 100%; }
+      .plan-job-card { break-inside: avoid; border: 1px solid #ccc; margin-bottom: 16px; }
+      .plan-job-photo-wrap img, .plan-job-photo-wrap video { width: 110px; }
+      .update-photo img, .update-photo video { max-width: 110px; }
+      .add-update-form, .updates-section .add-update-actions, .assign-row button,
+      .checklist-add-row, .checklist-delete-btn, .update-delete-btn,
+      .plan-job-header-actions, .detail-header-actions, .job-selector { display: none !important; }
+      .print-header { display: block !important; }
+    }
+    .print-header { display: none; padding: 0 0 16px; border-bottom: 2px solid var(--maroon); margin-bottom: 20px; }
+    .print-header h1 { font-size: 22px; font-weight: 700; color: var(--maroon); }
+    .print-header p { font-size: 13px; color: var(--ink-light); margin-top: 4px; }
+  </style>
+</head>
+<body>
+
+<div class="topbar no-print">
+  <div class="topbar-left">
+    <img src="logo.png" alt="Freshie Heroes">
+    <div>
+      <h1>Freshie Heroes</h1>
+      <p>Working Group Plans</p>
+    </div>
+  </div>
+  <a href="index.html">← Back to Job Board</a>
+</div>
+
+<div class="page">
+
+  <!-- Print header (only shows when printing) -->
+  <div class="print-header" id="print-header">
+    <h1 id="print-title">Working Group Plan</h1>
+    <p id="print-meta"></p>
+  </div>
+
+  <!-- Plans list view -->
+  <div id="plans-list">
+    <div class="plans-header">
+      <h2>Working Group Plans</h2>
+      <button class="btn-primary" onclick="openNewPlanModal()">＋ New Plan</button>
+    </div>
+    <div id="plans-container">
+      <div class="empty-state"><div class="icon">📋</div><p>Loading plans…</p></div>
+    </div>
+  </div>
+
+  <!-- Plan detail view -->
+  <div id="plan-detail">
+    <div class="detail-header no-print">
+      <div class="detail-header-info">
+        <h2 id="detail-name"></h2>
+        <div class="meta" id="detail-meta"></div>
+      </div>
+      <div class="detail-header-actions">
+        <button class="btn-secondary btn-sm" onclick="window.print()">🖨 Print</button>
+        <button class="btn-secondary btn-sm" onclick="openEditPlanModal()">✏️ Edit Plan</button>
+        <button class="btn-danger btn-sm" onclick="confirmDeletePlan()">🗑 Delete</button>
+        <button class="btn-secondary btn-sm" onclick="showList()">← All Plans</button>
+      </div>
+    </div>
+
+    <!-- Job selector -->
+    <div class="job-selector no-print">
+      <h3>Add Jobs to this Plan</h3>
+      <input class="selector-search" type="text" placeholder="Search jobs by title or location…" oninput="filterSelector(this.value)" id="selector-search">
+      <div class="selector-list" id="selector-list"></div>
+      <button class="btn-primary selector-add-btn" onclick="addSelectedJobs()">＋ Add Selected Jobs</button>
+    </div>
+
+    <!-- Job cards -->
+    <div class="plan-jobs" id="plan-jobs"></div>
+  </div>
+
+</div>
+
+<!-- New / Edit Plan Modal -->
+<div class="modal-backdrop" id="plan-modal" style="display:none" onclick="if(event.target===this)closePlanModal()">
+  <div class="modal">
+    <h3 id="plan-modal-title">New Working Group Plan</h3>
+    <label>Plan Name</label>
+    <input type="text" id="plan-name-input" placeholder="e.g. July Working Bee">
+    <label>Date (optional)</label>
+    <input type="date" id="plan-date-input">
+    <label>Created by</label>
+    <input type="text" id="plan-creator-input" placeholder="Your name">
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closePlanModal()">Cancel</button>
+      <button class="btn-primary" onclick="savePlan()">Save Plan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Lightbox -->
+<div class="modal-backdrop" id="lightbox" style="display:none" onclick="document.getElementById('lightbox').style.display='none'">
+  <img id="lightbox-img" src="" style="max-width:90vw;max-height:90vh;border-radius:8px;display:block;" alt="">
+</div>
+
+<script>
+const API = 'https://batur-core-production.up.railway.app';
+let allBoardJobs = [];
+let currentPlan = null;
+let currentPlanJobs = [];
+let editingPlanId = null;
+let updatePhotoFiles = {};
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+async function init() {
+  await Promise.all([loadBoardJobs(), loadPlans()]);
+}
+
+async function loadBoardJobs() {
+  try {
+    const res = await fetch(`${API}/surf/all-jobs`);
+    const data = await res.json();
+    if (data.success) allBoardJobs = data.jobs || [];
+  } catch {}
+}
+
+async function loadPlans() {
+  try {
+    const res = await fetch(`${API}/surf/plans`);
+    const data = await res.json();
+    renderPlansList(data.plans || []);
+  } catch {
+    document.getElementById('plans-container').innerHTML = '<div class="empty-state"><p>Could not load plans.</p></div>';
+  }
+}
+
+function renderPlansList(plans) {
+  const el = document.getElementById('plans-container');
+  if (!plans.length) {
+    el.innerHTML = '<div class="empty-state"><div class="icon">📋</div><p>No plans yet — create your first working group plan.</p></div>';
+    return;
+  }
+  el.innerHTML = plans.map(p => `
+    <div class="plan-card" onclick="openPlan('${p.id}')">
+      <div class="plan-card-info">
+        <div class="plan-card-name">${esc(p.name)}</div>
+        <div class="plan-card-meta">${p.date ? fmtDate(p.date) + ' · ' : ''}${p.job_count} job${p.job_count !== 1 ? 's' : ''}${p.created_by ? ' · Created by ' + esc(p.created_by) : ''}</div>
+      </div>
+      <span class="status-pill status-${p.status}">${statusLabel(p.status)}</span>
+      <div class="plan-card-actions" onclick="event.stopPropagation()">
+        <button class="btn-secondary btn-sm" onclick="confirmDeletePlanById('${p.id}', event)">🗑</button>
+      </div>
+    </div>`).join('');
+}
+
+// ── Plan detail ───────────────────────────────────────────────────────────────
+async function openPlan(id) {
+  try {
+    const [planRes, boardRes] = await Promise.all([
+      fetch(`${API}/surf/plans/${id}`).then(r => r.json()),
+      allBoardJobs.length ? Promise.resolve(null) : fetch(`${API}/surf/all-jobs`).then(r => r.json())
+    ]);
+    if (boardRes && boardRes.success) allBoardJobs = boardRes.jobs || [];
+    currentPlan = planRes.plan;
+    currentPlanJobs = planRes.jobs || [];
+    showDetail();
+    renderDetail();
+    renderSelector();
+  } catch {
+    alert('Could not load plan.');
+  }
+}
+
+function showDetail() {
+  document.getElementById('plans-list').style.display = 'none';
+  document.getElementById('plan-detail').style.display = 'block';
+}
+
+function showList() {
+  document.getElementById('plan-detail').style.display = 'none';
+  document.getElementById('plans-list').style.display = 'block';
+  loadPlans();
+}
+
+function renderDetail() {
+  document.getElementById('detail-name').textContent = currentPlan.name;
+  const meta = [
+    currentPlan.date ? fmtDate(currentPlan.date) : null,
+    currentPlan.created_by ? 'Created by ' + currentPlan.created_by : null,
+    statusLabel(currentPlan.status)
+  ].filter(Boolean).join(' · ');
+  document.getElementById('detail-meta').textContent = meta;
+  document.getElementById('print-title').textContent = currentPlan.name;
+  document.getElementById('print-meta').textContent = meta;
+  renderPlanJobs();
+}
+
+function renderPlanJobs() {
+  const el = document.getElementById('plan-jobs');
+  if (!currentPlanJobs.length) {
+    el.innerHTML = '<div class="empty-state no-print"><div class="icon">➕</div><p>No jobs added yet — select jobs above.</p></div>';
+    return;
+  }
+  el.innerHTML = currentPlanJobs.map(pj => buildPlanJobCard(pj)).join('');
+}
+
+function buildPlanJobCard(pj) {
+  const boardJob = allBoardJobs.find(j => j.id === pj.job_id) || {};
+  const priorityBadge = boardJob.priority ? `<span class="badge badge-${boardJob.priority.toLowerCase()}">${boardJob.priority}</span>` : '';
+  const safetyBadge = boardJob.safety_concern === 'Yes' ? `<span class="badge badge-safety">⚠ Safety</span>` : '';
+
+  const photoHtml = boardJob.photo
+    ? `<div class="plan-job-photo-wrap">${isVideo(boardJob.photo)
+        ? `<video src="${esc(boardJob.photo)}" controls style="width:130px;border-radius:7px;border:1px solid var(--stone);"></video>`
+        : `<img src="${esc(boardJob.photo)}" alt="Job photo" onclick="openLightbox('${esc(boardJob.photo)}')" style="cursor:pointer;">`}</div>`
+    : '';
+
+  const textCol = `<div class="plan-job-text">
+    ${boardJob.notes ? `<div class="field-label">Notes</div><div class="field-value">${esc(boardJob.notes)}</div>` : ''}
+    <div class="field-label">Assigned to</div>
+    <div class="assign-row">
+      <input class="assign-input" id="assign-${pj.id}" type="text" value="${esc(pj.assigned_to || '')}" placeholder="Type a name…">
+      <button class="assign-save-btn no-print" onclick="saveAssigned('${pj.id}')">Save</button>
+    </div>
+    <div class="checklist-section">
+      <div class="field-label">Checklist</div>
+      <div id="checklist-${pj.id}">
+        ${pj.checklist.map(c => buildChecklistItem(pj.id, c)).join('')}
+      </div>
+      <div class="checklist-add-row no-print">
+        <input class="checklist-add-input" id="chk-input-${pj.id}" type="text" placeholder="Add a task…" onkeydown="if(event.key==='Enter')addChecklistItem('${pj.id}')">
+        <button class="btn-secondary btn-sm" onclick="addChecklistItem('${pj.id}')">Add</button>
+      </div>
+    </div>
+  </div>`;
+
+  const updatesHtml = pj.updates.map(u => `
+    <div class="update-entry" id="update-${u.id}">
+      <div class="update-entry-content">
+        <div class="update-meta">${u.submitted_by ? esc(u.submitted_by) + ' · ' : ''}${timeAgo(u.created_at)}</div>
+        ${u.note ? `<div class="update-note">${esc(u.note)}</div>` : ''}
+        ${u.photo_url ? `<div class="update-photo">${isVideo(u.photo_url)
+          ? `<video src="${esc(u.photo_url)}" controls></video>`
+          : `<img src="${esc(u.photo_url)}" alt="Update photo" onclick="openLightbox('${esc(u.photo_url)}')">`}</div>` : ''}
+      </div>
+      <button class="update-delete-btn no-print" onclick="deleteUpdate('${pj.id}','${u.id}')" title="Delete">✕</button>
+    </div>`).join('');
+
+  return `<div class="plan-job-card status-${pj.status}" id="pjcard-${pj.id}">
+    <div class="plan-job-header">
+      <div class="plan-job-header-info">
+        <div class="plan-job-title">${esc(boardJob.issue || pj.job_id)}</div>
+        ${boardJob.location ? `<div class="plan-job-loc">📍 ${esc(boardJob.location)}</div>` : ''}
+        <div class="plan-job-badges">${priorityBadge}${safetyBadge}</div>
+      </div>
+      <div class="plan-job-header-actions no-print">
+        <select class="status-select" onchange="updateJobStatus('${pj.id}', this.value)">
+          <option value="not_started"${pj.status==='not_started'?' selected':''}>Not started</option>
+          <option value="in_progress"${pj.status==='in_progress'?' selected':''}>In progress</option>
+          <option value="done"${pj.status==='done'?' selected':''}>✓ Done</option>
+          <option value="needs_followup"${pj.status==='needs_followup'?' selected':''}>⚠ Needs follow-up</option>
+        </select>
+        <button class="btn-danger btn-sm" onclick="removeJobFromPlan('${pj.id}')">✕</button>
+      </div>
+    </div>
+    <div class="plan-job-body">
+      <div class="plan-job-cols">
+        ${textCol}
+        ${photoHtml}
+      </div>
+    </div>
+    <div class="updates-section">
+      <h4>Progress updates</h4>
+      <div id="updates-${pj.id}">${updatesHtml}</div>
+      <div class="add-update-form no-print">
+        <textarea id="update-note-${pj.id}" placeholder="Add a progress note…"></textarea>
+        <div class="add-update-actions">
+          <button class="btn-primary btn-sm" onclick="postUpdate('${pj.id}')">Post update</button>
+          <label class="add-update-photo-label">📷 Add photo
+            <input type="file" accept="image/*,video/*" style="display:none" onchange="stageUpdatePhoto('${pj.id}', this)">
+          </label>
+          <span class="update-photo-preview" id="update-photo-label-${pj.id}"></span>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function buildChecklistItem(pjId, c) {
+  return `<div class="checklist-item" id="chk-${c.id}">
+    <input type="checkbox" ${c.done ? 'checked' : ''} onchange="toggleChecklist('${pjId}','${c.id}',this.checked)">
+    <span class="checklist-item-text${c.done ? ' done' : ''}" id="chk-text-${c.id}">${esc(c.item_text)}</span>
+    <button class="checklist-delete-btn no-print" onclick="deleteChecklistItem('${pjId}','${c.id}')">✕</button>
+  </div>`;
+}
+
+// ── Job selector ──────────────────────────────────────────────────────────────
+function renderSelector() {
+  filterSelector('');
+}
+
+function filterSelector(query) {
+  const q = query.toLowerCase();
+  const addedIds = new Set(currentPlanJobs.map(j => j.job_id));
+  const filtered = allBoardJobs.filter(j =>
+    !q || j.issue.toLowerCase().includes(q) || (j.location || '').toLowerCase().includes(q)
+  );
+  const el = document.getElementById('selector-list');
+  if (!filtered.length) { el.innerHTML = '<div style="padding:14px;font-size:13px;color:#aaa;text-align:center;">No jobs found</div>'; return; }
+  el.innerHTML = filtered.map(j => {
+    const added = addedIds.has(j.id);
+    return `<label class="selector-item${added ? ' already-added' : ''}">
+      <input type="checkbox" value="${esc(j.id)}" ${added ? 'disabled checked' : ''}>
+      <div class="selector-item-text">
+        <div class="selector-item-title">${esc(j.issue)}</div>
+        ${j.location ? `<div class="selector-item-loc">📍 ${esc(j.location)}</div>` : ''}
+      </div>
+    </label>`;
+  }).join('');
+}
+
+async function addSelectedJobs() {
+  const checked = [...document.querySelectorAll('#selector-list input[type="checkbox"]:checked:not(:disabled)')];
+  if (!checked.length) { alert('Tick at least one job to add.'); return; }
+  for (const cb of checked) {
+    await fetch(`${API}/surf/plans/${currentPlan.id}/jobs`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ job_id: cb.value })
+    });
+  }
+  await refreshPlan();
+}
+
+// ── Plan actions ──────────────────────────────────────────────────────────────
+async function saveAssigned(pjId) {
+  const val = document.getElementById(`assign-${pjId}`).value.trim();
+  await fetch(`${API}/surf/plans/${currentPlan.id}/jobs/${pjId}`, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ assigned_to: val })
+  });
+}
+
+async function updateJobStatus(pjId, status) {
+  await fetch(`${API}/surf/plans/${currentPlan.id}/jobs/${pjId}`, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status })
+  });
+  const card = document.getElementById(`pjcard-${pjId}`);
+  if (card) {
+    card.className = `plan-job-card status-${status}`;
+  }
+  const pj = currentPlanJobs.find(j => j.id === pjId);
+  if (pj) pj.status = status;
+}
+
+async function removeJobFromPlan(pjId) {
+  if (!confirm('Remove this job from the plan?')) return;
+  await fetch(`${API}/surf/plans/${currentPlan.id}/jobs/${pjId}`, { method: 'DELETE' });
+  await refreshPlan();
+}
+
+async function addChecklistItem(pjId) {
+  const input = document.getElementById(`chk-input-${pjId}`);
+  const text = input.value.trim();
+  if (!text) return;
+  const res = await fetch(`${API}/surf/plans/${currentPlan.id}/jobs/${pjId}/checklist`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ item_text: text })
+  });
+  const data = await res.json();
+  if (data.success) {
+    input.value = '';
+    const pj = currentPlanJobs.find(j => j.id === pjId);
+    if (pj) pj.checklist.push(data.item);
+    const el = document.getElementById(`checklist-${pjId}`);
+    if (el) el.insertAdjacentHTML('beforeend', buildChecklistItem(pjId, data.item));
+  }
+}
+
+async function toggleChecklist(pjId, itemId, done) {
+  await fetch(`${API}/surf/plans/${currentPlan.id}/jobs/${pjId}/checklist/${itemId}`, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ done })
+  });
+  const textEl = document.getElementById(`chk-text-${itemId}`);
+  if (textEl) textEl.className = `checklist-item-text${done ? ' done' : ''}`;
+  const pj = currentPlanJobs.find(j => j.id === pjId);
+  if (pj) { const item = pj.checklist.find(c => c.id === itemId); if (item) item.done = done; }
+}
+
+async function deleteChecklistItem(pjId, itemId) {
+  await fetch(`${API}/surf/plans/${currentPlan.id}/jobs/${pjId}/checklist/${itemId}`, { method: 'DELETE' });
+  document.getElementById(`chk-${itemId}`)?.remove();
+  const pj = currentPlanJobs.find(j => j.id === pjId);
+  if (pj) pj.checklist = pj.checklist.filter(c => c.id !== itemId);
+}
+
+function stageUpdatePhoto(pjId, input) {
+  const file = input.files[0];
+  if (!file) return;
+  updatePhotoFiles[pjId] = file;
+  document.getElementById(`update-photo-label-${pjId}`).textContent = '✓ ' + file.name;
+}
+
+async function postUpdate(pjId) {
+  const note = document.getElementById(`update-note-${pjId}`).value.trim();
+  const file = updatePhotoFiles[pjId];
+  if (!note && !file) return;
+  const nameEl = document.getElementById('volunteer-name');
+  const name = nameEl ? nameEl.value.trim() : '';
+
+  const form = new FormData();
+  if (note) form.append('note', note);
+  if (name) form.append('submitted_by', name);
+  if (file) form.append('photo', file);
+
+  const res = await fetch(`${API}/surf/plans/${currentPlan.id}/jobs/${pjId}/updates`, { method: 'POST', body: form });
+  const data = await res.json();
+  if (data.success) {
+    document.getElementById(`update-note-${pjId}`).value = '';
+    delete updatePhotoFiles[pjId];
+    document.getElementById(`update-photo-label-${pjId}`).textContent = '';
+    const pj = currentPlanJobs.find(j => j.id === pjId);
+    if (pj) { pj.updates.push(data.update); }
+    const u = data.update;
+    const html = `<div class="update-entry" id="update-${u.id}">
+      <div class="update-entry-content">
+        <div class="update-meta">${u.submitted_by ? esc(u.submitted_by) + ' · ' : ''}just now</div>
+        ${u.note ? `<div class="update-note">${esc(u.note)}</div>` : ''}
+        ${u.photo_url ? `<div class="update-photo">${isVideo(u.photo_url)
+          ? `<video src="${esc(u.photo_url)}" controls></video>`
+          : `<img src="${esc(u.photo_url)}" alt="Update photo" onclick="openLightbox('${esc(u.photo_url)}')">`}</div>` : ''}
+      </div>
+      <button class="update-delete-btn no-print" onclick="deleteUpdate('${pjId}','${u.id}')" title="Delete">✕</button>
+    </div>`;
+    document.getElementById(`updates-${pjId}`).insertAdjacentHTML('beforeend', html);
+  }
+}
+
+async function deleteUpdate(pjId, updateId) {
+  if (!confirm('Delete this update?')) return;
+  await fetch(`${API}/surf/plans/${currentPlan.id}/jobs/${pjId}/updates/${updateId}`, { method: 'DELETE' });
+  document.getElementById(`update-${updateId}`)?.remove();
+  const pj = currentPlanJobs.find(j => j.id === pjId);
+  if (pj) pj.updates = pj.updates.filter(u => u.id !== updateId);
+}
+
+// ── Create / Edit / Delete plan ───────────────────────────────────────────────
+function openNewPlanModal() {
+  editingPlanId = null;
+  document.getElementById('plan-modal-title').textContent = 'New Working Group Plan';
+  document.getElementById('plan-name-input').value = '';
+  document.getElementById('plan-date-input').value = '';
+  document.getElementById('plan-creator-input').value = '';
+  document.getElementById('plan-modal').style.display = 'flex';
+  setTimeout(() => document.getElementById('plan-name-input').focus(), 50);
+}
+
+function openEditPlanModal() {
+  editingPlanId = currentPlan.id;
+  document.getElementById('plan-modal-title').textContent = 'Edit Plan';
+  document.getElementById('plan-name-input').value = currentPlan.name || '';
+  document.getElementById('plan-date-input').value = currentPlan.date ? currentPlan.date.split('T')[0] : '';
+  document.getElementById('plan-creator-input').value = currentPlan.created_by || '';
+  document.getElementById('plan-modal').style.display = 'flex';
+}
+
+function closePlanModal() { document.getElementById('plan-modal').style.display = 'none'; }
+
+async function savePlan() {
+  const name = document.getElementById('plan-name-input').value.trim();
+  if (!name) { alert('Please enter a plan name.'); return; }
+  const body = {
+    name,
+    date: document.getElementById('plan-date-input').value || null,
+    created_by: document.getElementById('plan-creator-input').value.trim() || null
+  };
+  if (editingPlanId) {
+    const res = await fetch(`${API}/surf/plans/${editingPlanId}`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (data.success) { currentPlan = data.plan; renderDetail(); }
+  } else {
+    const res = await fetch(`${API}/surf/plans`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (data.success) { closePlanModal(); await openPlan(data.plan.id); return; }
+  }
+  closePlanModal();
+}
+
+async function confirmDeletePlan() {
+  if (!confirm(`Delete "${currentPlan.name}"? This cannot be undone.`)) return;
+  await fetch(`${API}/surf/plans/${currentPlan.id}`, { method: 'DELETE' });
+  showList();
+}
+
+async function confirmDeletePlanById(id, e) {
+  e.stopPropagation();
+  if (!confirm('Delete this plan? This cannot be undone.')) return;
+  await fetch(`${API}/surf/plans/${id}`, { method: 'DELETE' });
+  loadPlans();
+}
+
+async function refreshPlan() {
+  const res = await fetch(`${API}/surf/plans/${currentPlan.id}`);
+  const data = await res.json();
+  currentPlan = data.plan;
+  currentPlanJobs = data.jobs || [];
+  renderDetail();
+  renderSelector();
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function statusLabel(s) {
+  return { planning: 'Planning', active: 'Active', complete: 'Complete' }[s] || s;
+}
+function isVideo(url) { return /\.(mp4|mov|webm|avi|mkv)(\?|$)/i.test(url || ''); }
+function esc(s) {
+  if (typeof s !== 'string') return '';
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function fmtDate(d) {
+  if (!d) return '';
+  const dt = new Date(d);
+  return dt.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+function timeAgo(ts) {
+  const diff = Math.floor((Date.now() - new Date(ts)) / 1000);
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
+  return fmtDate(ts);
+}
+function openLightbox(url) {
+  document.getElementById('lightbox-img').src = url;
+  document.getElementById('lightbox').style.display = 'flex';
+}
+
+init();
+</script>
+</body>
+</html>
