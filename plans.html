@@ -75,6 +75,11 @@
     /* ── Job selector ── */
     .job-selector { background: #fff; border: 1.5px solid var(--stone); border-radius: 10px; padding: 16px; margin-bottom: 20px; }
     .job-selector h3 { font-size: 14px; font-weight: 700; margin-bottom: 12px; color: var(--ink-mid); text-transform: uppercase; letter-spacing: 0.04em; }
+    .volunteer-name-row { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+    .volunteer-name-row label { font-size: 14px; font-weight: 600; white-space: nowrap; }
+    .volunteer-name-row small { font-weight: 400; color: var(--ink-light); }
+    .volunteer-name-row input { padding: 8px 12px; border: 1.5px solid var(--stone); border-radius: 7px; font-size: 14px; font-family: inherit; outline: none; width: 220px; }
+    .volunteer-name-row input:focus { border-color: var(--maroon); }
     .selector-search { width: 100%; padding: 9px 12px; border: 1.5px solid var(--stone); border-radius: 7px; font-size: 14px; outline: none; margin-bottom: 10px; font-family: inherit; }
     .selector-search:focus { border-color: var(--maroon); }
     .selector-list { max-height: 260px; overflow-y: auto; border: 1px solid var(--cream-dark); border-radius: 7px; }
@@ -239,6 +244,12 @@
       </div>
     </div>
 
+    <!-- Volunteer name -->
+    <div class="volunteer-name-row no-print">
+      <label>Your name <small>(used for progress updates)</small></label>
+      <input type="text" id="volunteer-name" placeholder="e.g. Sarah" autocomplete="given-name">
+    </div>
+
     <!-- Job selector -->
     <div class="job-selector no-print">
       <h3>Add Jobs to this Plan</h3>
@@ -290,7 +301,7 @@ async function init() {
 
 async function loadBoardJobs() {
   try {
-    const res = await fetch(`${API}/surf/all-jobs`);
+    const res = await fetch(`${API}/surf/jobs-list`);
     const data = await res.json();
     if (data.success) allBoardJobs = data.jobs || [];
   } catch {}
@@ -330,7 +341,7 @@ async function openPlan(id) {
   try {
     const [planRes, boardRes] = await Promise.all([
       fetch(`${API}/surf/plans/${id}`).then(r => r.json()),
-      allBoardJobs.length ? Promise.resolve(null) : fetch(`${API}/surf/all-jobs`).then(r => r.json())
+      allBoardJobs.length ? Promise.resolve(null) : fetch(`${API}/surf/jobs-list`).then(r => r.json())
     ]);
     if (boardRes && boardRes.success) allBoardJobs = boardRes.jobs || [];
     currentPlan = planRes.plan;
@@ -377,7 +388,7 @@ function renderPlanJobs() {
 }
 
 function buildPlanJobCard(pj) {
-  const boardJob = allBoardJobs.find(j => j.id === pj.job_id) || {};
+  const boardJob = allBoardJobs.find(j => j.job_id === pj.job_id) || {};
   const priorityBadge = boardJob.priority ? `<span class="badge badge-${boardJob.priority.toLowerCase()}">${boardJob.priority}</span>` : '';
   const safetyBadge = boardJob.safety_concern === 'Yes' ? `<span class="badge badge-safety">⚠ Safety</span>` : '';
 
@@ -480,9 +491,9 @@ function filterSelector(query) {
   const el = document.getElementById('selector-list');
   if (!filtered.length) { el.innerHTML = '<div style="padding:14px;font-size:13px;color:#aaa;text-align:center;">No jobs found</div>'; return; }
   el.innerHTML = filtered.map(j => {
-    const added = addedIds.has(j.id);
+    const added = addedIds.has(j.job_id);
     return `<label class="selector-item${added ? ' already-added' : ''}">
-      <input type="checkbox" value="${esc(j.id)}" ${added ? 'disabled checked' : ''}>
+      <input type="checkbox" value="${esc(j.job_id)}" ${added ? 'disabled checked' : ''}>
       <div class="selector-item-text">
         <div class="selector-item-title">${esc(j.issue)}</div>
         ${j.location ? `<div class="selector-item-loc">📍 ${esc(j.location)}</div>` : ''}
