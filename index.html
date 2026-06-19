@@ -695,10 +695,10 @@
     <div class="multi-select-dropdown" id="category-dropdown">
       <label class="multi-select-option"><input type="checkbox" value="Repair" onchange="updateMultiFilter('category-dropdown','category-label','📋 All categories')"> 🔧 Repair</label>
       <label class="multi-select-option"><input type="checkbox" value="Replace" onchange="updateMultiFilter('category-dropdown','category-label','📋 All categories')"> 🔄 Replace</label>
-      <label class="multi-select-option"><input type="checkbox" value="Painting" onchange="updateMultiFilter('category-dropdown','category-label','📋 All categories')"> 🎨 Painting</label>
+      <label class="multi-select-option"><input type="checkbox" id="cat-painting" value="Painting" onchange="updateCategoryFilter()"> 🎨 Painting</label>
       <label class="multi-select-option"><input type="checkbox" value="Cleaning" onchange="updateMultiFilter('category-dropdown','category-label','📋 All categories')"> 🧹 Cleaning</label>
       <label class="multi-select-option"><input type="checkbox" value="Gardening" onchange="updateMultiFilter('category-dropdown','category-label','📋 All categories')"> 🌿 Gardening</label>
-      <label class="multi-select-option"><input type="checkbox" value="Repair/Paint" onchange="updateMultiFilter('category-dropdown','category-label','📋 All categories')"> 🔧🎨 Repair/Paint</label>
+      <label class="multi-select-option"><input type="checkbox" id="cat-repaintpaint" value="Repair/Paint" onchange="updateMultiFilter('category-dropdown','category-label','📋 All categories')"> 🔧🎨 Repair/Paint</label>
     </div>
   </div>
   <div class="multi-select-wrap" id="resp-wrap">
@@ -1248,6 +1248,13 @@ function updateMultiFilter(ddId, labelId, allLabel) {
 }
 
 function toggleRespDropdown(e) { toggleDropdown(e, 'resp-dropdown', 'resp-btn'); }
+function updateCategoryFilter() {
+  const paintEl = document.getElementById('cat-painting');
+  const rpEl = document.getElementById('cat-repaintpaint');
+  if (paintEl && rpEl && paintEl.checked && !rpEl.checked) rpEl.checked = true;
+  updateMultiFilter('category-dropdown', 'category-label', '📋 All categories');
+}
+
 function updateRespFilter() {
   const clubEl = document.getElementById('resp-club');
   const wbEl = document.getElementById('resp-workingbee');
