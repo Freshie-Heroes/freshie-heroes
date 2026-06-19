@@ -850,6 +850,8 @@ let commentsData = {}; // job_id → [ { id, comment, photo, submitted_by, creat
 let commentPhotoFiles = {}; // job_id → File (pending upload for new comment)
 let editingCommentId = null; // comment id currently being edited inline
 let notesEditingId = null;  // job id whose notes field is being edited inline
+let editPhotoFiles = {};    // jobId → File staged in edit panel
+let removePhotoFor = {};    // jobId → true when user wants to remove existing photo
 let showDone = true;
 let showOnlyDone = false;
 
@@ -1070,9 +1072,12 @@ function buildCard(job) {
   const editResp = job.responsible || '';
   const editCat = job.category || '';
   const currentPhotoHtml = job.photo
-    ? (isVideo(job.photo)
-        ? `<video class="edit-photo-preview" src="${esc(job.photo)}" controls></video>`
-        : `<img class="edit-photo-preview" src="${esc(job.photo)}" alt="Current photo">`)
+    ? `<div style="position:relative;display:inline-block;margin-bottom:6px;" id="current-photo-wrap-${esc(job.id)}">
+         ${isVideo(job.photo)
+           ? `<video class="edit-photo-preview" src="${esc(job.photo)}" controls></video>`
+           : `<img class="edit-photo-preview" src="${esc(job.photo)}" alt="Current photo">`}
+         <button onclick="markRemovePhoto('${esc(job.id)}')" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:50%;width:24px;height:24px;font-size:15px;cursor:pointer;line-height:1;padding:0;" title="Remove photo">×</button>
+       </div>`
     : '';
 
   const editPanelHtml = `
@@ -1350,14 +1355,22 @@ function stageCmntPhoto(jobId, input) {
   const file = input.files[0];
   if (!file) return;
   commentPhotoFiles[jobId] = file;
-  const preview = document.getElementById(`cmnt-preview-${jobId}`);
+  const preview = document.getElementById(`cmnt-preview-${CSS.escape(jobId)}`);
   if (!preview) return;
   const url = URL.createObjectURL(file);
-  if (isVideo(file.name)) {
-    preview.innerHTML = `<video class="comment-vid" src="${url}" controls preload="none" style="margin-top:4px"></video>`;
-  } else {
-    preview.innerHTML = `<img class="comment-img" src="${url}" alt="Preview" style="margin-top:4px">`;
-  }
+  const media = isVideo(file.name)
+    ? `<video class="comment-vid" src="${url}" controls preload="none" style="margin-top:4px"></video>`
+    : `<img class="comment-img" src="${url}" alt="Preview" style="margin-top:4px">`;
+  preview.innerHTML = `<div style="position:relative;display:inline-block;">${media}<button onclick="removeCmntPhoto('${esc(jobId)}')" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:50%;width:24px;height:24px;font-size:15px;cursor:pointer;line-height:1;padding:0;" title="Remove">×</button></div>`;
+}
+
+function removeCmntPhoto(jobId) {
+  delete commentPhotoFiles[jobId];
+  const preview = document.getElementById(`cmnt-preview-${CSS.escape(jobId)}`);
+  if (preview) preview.innerHTML = '';
+  [`cmnt-photo-cam-${jobId}`,`cmnt-video-cam-${jobId}`,`cmnt-photo-${jobId}`].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
 }
 
 async function postComment(jobId) {
@@ -1552,14 +1565,30 @@ function closeEditPanel(jobId) {
 function previewEditPhoto(jobId, input) {
   const file = input.files[0];
   if (!file) return;
-  const preview = document.getElementById(`edit-photo-new-${jobId}`);
+  editPhotoFiles[jobId] = file;
+  delete removePhotoFor[jobId];
+  const preview = document.getElementById(`edit-photo-new-${CSS.escape(jobId)}`);
   if (!preview) return;
   const url = URL.createObjectURL(file);
-  if (isVideo(file.name)) {
-    preview.innerHTML = `<video class="edit-photo-preview" src="${url}" controls></video>`;
-  } else {
-    preview.innerHTML = `<img class="edit-photo-preview" src="${url}" alt="New photo preview">`;
-  }
+  const media = isVideo(file.name)
+    ? `<video class="edit-photo-preview" src="${url}" controls></video>`
+    : `<img class="edit-photo-preview" src="${url}" alt="New photo preview">`;
+  preview.innerHTML = `<div style="position:relative;display:inline-block;">${media}<button onclick="removeEditPhoto('${esc(jobId)}')" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:50%;width:24px;height:24px;font-size:15px;cursor:pointer;line-height:1;padding:0;" title="Remove">×</button></div>`;
+}
+
+function removeEditPhoto(jobId) {
+  delete editPhotoFiles[jobId];
+  const preview = document.getElementById(`edit-photo-new-${CSS.escape(jobId)}`);
+  if (preview) preview.innerHTML = '';
+  [`edit-photo-cam-${jobId}`,`edit-video-cam-${jobId}`,`edit-photo-file-${jobId}`].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+}
+
+function markRemovePhoto(jobId) {
+  removePhotoFor[jobId] = true;
+  const wrap = document.getElementById(`current-photo-wrap-${CSS.escape(jobId)}`);
+  if (wrap) wrap.remove();
 }
 
 async function uploadJobPhoto(file) {
@@ -1580,10 +1609,10 @@ async function saveEdit(jobId) {
 
   try {
     let photoUrl;
-    const fileInput = document.getElementById(`edit-photo-file-${jobId}`);
-    if (fileInput && fileInput.files[0]) {
+    const newFile = editPhotoFiles[jobId];
+    if (newFile) {
       if (statusEl) statusEl.textContent = 'Uploading photo...';
-      photoUrl = await uploadJobPhoto(fileInput.files[0]);
+      photoUrl = await uploadJobPhoto(newFile);
     }
 
     const body = {
@@ -1596,6 +1625,7 @@ async function saveEdit(jobId) {
       notes: document.getElementById(`edit-notes-${jobId}`)?.value.trim(),
     };
     if (photoUrl) body.photo = photoUrl;
+    else if (removePhotoFor[jobId]) body.photo = '';
 
     const res = await fetch(`${API}/surf/jobs/${encodeURIComponent(jobId)}`, {
       method: 'PUT',
@@ -1610,6 +1640,8 @@ async function saveEdit(jobId) {
       allJobs[jobIdx] = { ...allJobs[jobIdx], ...data.job, id: jobId };
     }
 
+    delete editPhotoFiles[jobId];
+    delete removePhotoFor[jobId];
     if (statusEl) { statusEl.textContent = '✓ Saved!'; statusEl.style.color = 'var(--green)'; statusEl.style.fontWeight = '700'; }
     setTimeout(() => {
       const card = document.querySelector(`.job-card[data-id="${CSS.escape(jobId)}"]`);
@@ -1843,11 +1875,17 @@ function stageLjPhoto(input) {
   document.getElementById('lj-photo-name').textContent = '✓ ' + file.name;
   const preview = document.getElementById('lj-photo-preview');
   const url = URL.createObjectURL(file);
-  if (isVideo(file.name)) {
-    preview.innerHTML = `<video style="max-width:100%;max-height:160px;border-radius:7px;border:1px solid var(--stone);" src="${url}" controls></video>`;
-  } else {
-    preview.innerHTML = `<img style="max-width:100%;max-height:160px;border-radius:7px;border:1px solid var(--stone);display:block;" src="${url}" alt="Preview">`;
-  }
+  const media = isVideo(file.name)
+    ? `<video style="max-width:100%;max-height:160px;border-radius:7px;border:1px solid var(--stone);" src="${url}" controls></video>`
+    : `<img style="max-width:100%;max-height:160px;border-radius:7px;border:1px solid var(--stone);display:block;" src="${url}" alt="Preview">`;
+  preview.innerHTML = `<div style="position:relative;display:inline-block;">${media}<button onclick="removeLjPhoto()" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:50%;width:24px;height:24px;font-size:15px;cursor:pointer;line-height:1;padding:0;" title="Remove">×</button></div>`;
+}
+
+function removeLjPhoto() {
+  ljPhotoFile = null;
+  document.getElementById('lj-photo-preview').innerHTML = '';
+  document.getElementById('lj-photo-name').textContent = '';
+  ['lj-photo-cam','lj-video-cam','lj-photo-lib'].forEach(id => { document.getElementById(id).value = ''; });
 }
 
 function openLogJobModal() {
