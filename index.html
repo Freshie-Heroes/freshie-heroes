@@ -411,7 +411,7 @@
       border: 1px solid var(--stone);
       border-radius: 8px;
     }
-    .edit-panel.open { display: flex; }
+    .edit-panel.open { display: flex; border-top: 3px solid var(--terracotta); }
     .edit-row { display: flex; flex-direction: column; gap: 3px; }
     .edit-row label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: var(--ink-mid); }
     .edit-row input, .edit-row select, .edit-row textarea {
@@ -1194,7 +1194,7 @@ function buildCard(job) {
           onchange="toggleDone('${esc(job.id)}', this.checked)">
         <label class="done-label" for="done-${esc(job.id)}">Mark as completed</label>
         ${doneByHtml}
-        <button class="edit-btn" onclick="openEditPanel('${esc(job.id)}')">✏️ Edit Job</button>
+        <button class="edit-btn edit-job-btn" onclick="openEditPanel('${esc(job.id)}')">✏️ Edit Job</button>
         ${isHeroJob ? `<button class="edit-btn" id="del-btn-${esc(job.id)}" onclick="confirmDeleteJob('${esc(job.id)}')" style="color:#b91c1c;border-color:#fecaca;">🗑️ Delete</button>` : ''}
       </div>
       ${heroesHtml}
@@ -1584,12 +1584,19 @@ window.addEventListener('beforeunload', () => {
 // ── Edit panel ────────────────────────────────────────────────
 function openEditPanel(jobId) {
   const panel = document.getElementById(`edit-panel-${jobId}`);
-  if (panel) panel.classList.toggle('open');
+  if (!panel) return;
+  const isOpening = !panel.classList.contains('open');
+  panel.classList.toggle('open');
+  const btn = document.querySelector(`.job-card[data-id="${CSS.escape(jobId)}"] .edit-job-btn`);
+  if (btn) btn.textContent = isOpening ? '✕ Close Edit' : '✏️ Edit Job';
+  if (isOpening) panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function closeEditPanel(jobId) {
   const panel = document.getElementById(`edit-panel-${jobId}`);
   if (panel) panel.classList.remove('open');
+  const btn = document.querySelector(`.job-card[data-id="${CSS.escape(jobId)}"] .edit-job-btn`);
+  if (btn) btn.textContent = '✏️ Edit Job';
 }
 
 function previewEditPhoto(jobId, input) {
