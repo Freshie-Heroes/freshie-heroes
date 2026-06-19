@@ -1867,21 +1867,22 @@ async function submitLogJob() {
     const data = await res.json();
     if (!data.success) throw new Error(data.error || 'Could not save job.');
 
-    // Add new job to local list and re-render
-    allJobs.unshift({ ...data.job, id: data.job.job_id });
+    // Add new job to local list, render card immediately and prepend to list
+    const newJob = { ...data.job, id: data.job.job_id };
+    allJobs.unshift(newJob);
     closeLogJobModal();
+
+    const wrap = document.getElementById('jobs-wrap');
+    const emptyState = wrap.querySelector('.empty-state');
+    if (emptyState) emptyState.remove();
+    const newCard = buildCard(newJob);
+    newCard.style.outline = '2.5px solid var(--maroon)';
+    wrap.prepend(newCard);
+    newCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    setTimeout(() => { newCard.style.outline = ''; newCard.style.transition = 'outline 0.4s'; }, 2500);
+
     applyFilters();
     renderStats();
-
-    // Briefly highlight the new card
-    setTimeout(() => {
-      const newCard = document.querySelector(`.job-card[data-id="${data.job.job_id}"]`);
-      if (newCard) {
-        newCard.style.outline = '2.5px solid var(--maroon)';
-        newCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        setTimeout(() => { newCard.style.outline = ''; }, 2500);
-      }
-    }, 100);
   } catch (err) {
     const errEl = document.getElementById('lj-error');
     errEl.innerHTML = `<strong>Something went wrong:</strong> ${esc(err.message || 'Could not log the job.')}<br><span style="font-size:12px;opacity:0.8;">Please let your admin know so they can fix this.</span>`;
