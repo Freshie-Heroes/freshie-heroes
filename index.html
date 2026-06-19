@@ -1277,6 +1277,10 @@ async function toggleDone(jobId, done) {
       if (done) {
         newCard.classList.add('card-focused');
         document.getElementById('jobs-wrap').classList.add('has-focused');
+      } else {
+        // Clear all spotlight state when unticking
+        document.querySelectorAll('.job-card.card-focused').forEach(c => c.classList.remove('card-focused'));
+        document.getElementById('jobs-wrap').classList.remove('has-focused');
       }
     }
     renderStats();
