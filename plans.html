@@ -365,6 +365,10 @@ function renderDetail() {
   document.getElementById('detail-meta').textContent = meta;
   document.getElementById('print-title').textContent = currentPlan.name;
   document.getElementById('print-meta').textContent = meta;
+  if (currentPlan.created_by) {
+    const nameEl = document.getElementById('volunteer-name');
+    if (!nameEl.value) nameEl.value = currentPlan.created_by;
+  }
   renderPlanJobs();
 }
 
