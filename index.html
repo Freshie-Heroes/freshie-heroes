@@ -803,6 +803,22 @@
         <label>Notes (optional)</label>
         <textarea id="lj-notes" class="log-job-textarea" style="min-height:52px;" placeholder="Any extra details, context, or instructions…"></textarea>
       </div>
+      <div class="log-job-field">
+        <label>Photo / Video (optional)</label>
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          <div class="photo-picker-wrap" id="lj-picker-wrap">
+            <button class="edit-upload-label" style="font-size:12px;padding:6px 14px;cursor:pointer;border:none;" onclick="togglePhotoPicker(event,'lj-picker-menu')">📷 Photo / Video</button>
+            <div class="photo-picker-menu" id="lj-picker-menu">
+              <label class="photo-picker-opt" for="lj-photo-cam">📷 Take photo or video</label>
+              <label class="photo-picker-opt" for="lj-photo-lib">🖼️ Choose from library</label>
+            </div>
+            <input type="file" id="lj-photo-cam" accept="image/*,video/*" capture="environment" style="display:none" onchange="stageLjPhoto(this)">
+            <input type="file" id="lj-photo-lib" accept="image/*,video/*" style="display:none" onchange="stageLjPhoto(this)">
+          </div>
+          <span id="lj-photo-name" style="font-size:12px; color:var(--ink-mid);"></span>
+        </div>
+        <div id="lj-photo-preview" style="margin-top:8px;"></div>
+      </div>
       <div id="lj-error" style="display:none; color:var(--maroon); font-size:13px; font-weight:600;"></div>
     </div>
     <div class="log-job-footer">
@@ -1708,6 +1724,22 @@ function printCompletedReport() {
 }
 
 // ── Log a Job ────────────────────────────────────────────────
+let ljPhotoFile = null;
+
+function stageLjPhoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  ljPhotoFile = file;
+  document.getElementById('lj-photo-name').textContent = '✓ ' + file.name;
+  const preview = document.getElementById('lj-photo-preview');
+  const url = URL.createObjectURL(file);
+  if (isVideo(file.name)) {
+    preview.innerHTML = `<video style="max-width:100%;max-height:160px;border-radius:7px;border:1px solid var(--stone);" src="${url}" controls></video>`;
+  } else {
+    preview.innerHTML = `<img style="max-width:100%;max-height:160px;border-radius:7px;border:1px solid var(--stone);display:block;" src="${url}" alt="Preview">`;
+  }
+}
+
 function openLogJobModal() {
   document.getElementById('lj-issue').value = '';
   document.getElementById('lj-location').value = '';
@@ -1716,6 +1748,11 @@ function openLogJobModal() {
   document.getElementById('lj-responsible').value = '';
   document.getElementById('lj-safety').checked = false;
   document.getElementById('lj-notes').value = '';
+  document.getElementById('lj-photo-cam').value = '';
+  document.getElementById('lj-photo-lib').value = '';
+  document.getElementById('lj-photo-preview').innerHTML = '';
+  document.getElementById('lj-photo-name').textContent = '';
+  ljPhotoFile = null;
   document.getElementById('lj-error').style.display = 'none';
   document.getElementById('lj-submit').disabled = false;
   document.getElementById('lj-submit').textContent = 'Log this Job';
@@ -1758,6 +1795,12 @@ async function submitLogJob() {
   };
 
   try {
+    if (ljPhotoFile) {
+      btn.textContent = 'Uploading photo…';
+      body.photo = await uploadJobPhoto(ljPhotoFile);
+    }
+
+    btn.textContent = 'Logging…';
     const res = await fetch(`${API}/surf/jobs`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     const data = await res.json();
     if (!data.success) throw new Error(data.error || 'Could not save job.');
