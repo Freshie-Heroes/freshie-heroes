@@ -1510,7 +1510,7 @@ async function uploadJobPhoto(file) {
 
 async function saveEdit(jobId) {
   const statusEl = document.getElementById(`edit-status-${jobId}`);
-  const saveBtn = document.querySelector(`#edit-panel-${jobId} .edit-save-btn`);
+  const saveBtn = document.querySelector(`#edit-panel-${CSS.escape(jobId)} .edit-save-btn`);
   if (saveBtn) saveBtn.disabled = true;
   if (statusEl) { statusEl.textContent = 'Saving...'; statusEl.style.color = 'var(--ink-mid)'; }
 
@@ -1529,7 +1529,7 @@ async function saveEdit(jobId) {
       safety_concern: document.getElementById(`edit-safety-${jobId}`)?.value || null,
       responsible: document.getElementById(`edit-responsible-${jobId}`)?.value || null,
       category: document.getElementById(`edit-category-${jobId}`)?.value || null,
-      notes: document.getElementById(`edit-notes-${jobId}`)?.value || null,
+      notes: document.getElementById(`edit-notes-${jobId}`)?.value.trim(),
     };
     if (photoUrl) body.photo = photoUrl;
 
@@ -1546,8 +1546,11 @@ async function saveEdit(jobId) {
       allJobs[jobIdx] = { ...allJobs[jobIdx], ...data.job, id: jobId };
     }
 
-    const card = document.querySelector(`.job-card[data-id="${jobId}"]`);
-    if (card) card.replaceWith(buildCard(allJobs.find(j => j.id === jobId)));
+    if (statusEl) { statusEl.textContent = '✓ Saved!'; statusEl.style.color = 'var(--green)'; statusEl.style.fontWeight = '700'; }
+    setTimeout(() => {
+      const card = document.querySelector(`.job-card[data-id="${CSS.escape(jobId)}"]`);
+      if (card) card.replaceWith(buildCard(allJobs.find(j => j.id === jobId)));
+    }, 900);
 
   } catch (err) {
     if (statusEl) { statusEl.textContent = '✗ ' + (err.message || 'Could not save'); statusEl.style.color = 'var(--red)'; }
