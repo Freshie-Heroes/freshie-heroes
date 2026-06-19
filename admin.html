@@ -137,7 +137,7 @@
   <label for="password">Admin Password</label>
   <div class="pw-row">
     <div class="pw-wrap">
-      <input type="password" id="password" placeholder="Enter password" onkeydown="if(event.key==='Enter')unlockAdmin()">
+      <input type="password" id="password" class="pw-text" placeholder="Enter password" onkeydown="if(event.key==='Enter')unlockAdmin()">
       <button class="pw-toggle" type="button" onclick="togglePwView()" title="Show/hide password">👁</button>
     </div>
     <button class="unlock-btn" id="unlock-btn" onclick="unlockAdmin()">Unlock</button>
