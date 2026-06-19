@@ -1663,6 +1663,16 @@ function saveName() {
 window.addEventListener('scroll', () => {
   const el = document.getElementById('volunteer-name');
   if (el && document.activeElement === el) el.blur();
+
+  document.querySelectorAll('.cmnt-collapsed-body').forEach(body => {
+    if (body.style.display === 'none') return;
+    const jobId = body.id.replace('cmnt-body-', '');
+    const textarea = document.getElementById(`cmnt-input-${jobId}`);
+    const hasPhoto = commentPhotoFiles && commentPhotoFiles[jobId];
+    if (textarea && !textarea.value.trim() && !hasPhoto) {
+      rebuildCard(jobId);
+    }
+  });
 }, { passive: true });
 
 // ── Session tracking ─────────────────────────────────────────
