@@ -35,7 +35,7 @@
     .logo-row h1 { font-size: 20px; font-weight: 700; color: #7B1A1A; }
     .logo-row p { font-size: 13px; color: #888; margin-top: 2px; }
     label { display: block; font-size: 13px; font-weight: 600; color: #5a5a58; margin-bottom: 6px; margin-top: 20px; }
-    input[type="password"], input[type="file"] {
+    input[type="password"], input[type="text"].pw-text, input[type="file"] {
       width: 100%;
       padding: 10px 14px;
       border: 1.5px solid #D3CFC7;
@@ -44,7 +44,19 @@
       outline: none;
       transition: border-color 0.2s;
     }
-    input[type="password"]:focus, input[type="file"]:focus { border-color: #7B1A1A; }
+    input[type="password"]:focus, input[type="text"].pw-text:focus, input[type="file"]:focus { border-color: #7B1A1A; }
+    .pw-wrap { position: relative; }
+    .pw-wrap input { padding-right: 44px; }
+    .pw-toggle { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 17px; color: #888; padding: 0; line-height: 1; }
+    .pw-toggle:hover { color: #2C2C2A; }
+    .pw-row { display: flex; gap: 8px; align-items: stretch; margin-top: 0; }
+    .pw-row .pw-wrap { flex: 1; }
+    .unlock-btn { padding: 10px 18px; background: #7B1A1A; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: background 0.2s; }
+    .unlock-btn:hover { background: #5a1212; }
+    .unlock-btn.unlocked { background: #2d6a2d; }
+    .pw-status { margin-top: 7px; font-size: 12px; font-weight: 600; min-height: 18px; }
+    .pw-status.ok { color: #2d6a2d; }
+    .pw-status.fail { color: #b91c1c; }
     .drop-zone {
       border: 2px dashed #D3CFC7;
       border-radius: 10px;
@@ -123,7 +135,14 @@
   </div>
 
   <label for="password">Admin Password</label>
-  <input type="password" id="password" placeholder="Enter password">
+  <div class="pw-row">
+    <div class="pw-wrap">
+      <input type="password" id="password" placeholder="Enter password" onkeydown="if(event.key==='Enter')unlockAdmin()">
+      <button class="pw-toggle" type="button" onclick="togglePwView()" title="Show/hide password">👁</button>
+    </div>
+    <button class="unlock-btn" id="unlock-btn" onclick="unlockAdmin()">Unlock</button>
+  </div>
+  <div class="pw-status" id="pw-status"></div>
 
   <label>Upload CSV File</label>
   <div class="drop-zone" id="drop-zone" onclick="document.getElementById('csv-file').click()">
@@ -289,6 +308,40 @@ function fmtDuration(secs) {
 
 function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function togglePwView() {
+  const input = document.getElementById('password');
+  input.type = input.type === 'password' ? 'text' : 'password';
+}
+
+async function unlockAdmin() {
+  const password = document.getElementById('password').value.trim();
+  const status = document.getElementById('pw-status');
+  const btn = document.getElementById('unlock-btn');
+  if (!password) { status.textContent = 'Please enter the password.'; status.className = 'pw-status fail'; return; }
+  btn.textContent = 'Checking…';
+  btn.disabled = true;
+  try {
+    const res = await fetch(`${API}/surf/sessions?password=${encodeURIComponent(password)}`);
+    const data = await res.json();
+    if (data.success) {
+      status.textContent = '✓ Password accepted — you can now upload or load activity below.';
+      status.className = 'pw-status ok';
+      btn.textContent = '✓ Unlocked';
+      btn.classList.add('unlocked');
+    } else {
+      status.textContent = '✗ Incorrect password.';
+      status.className = 'pw-status fail';
+      btn.textContent = 'Unlock';
+      btn.disabled = false;
+    }
+  } catch {
+    status.textContent = 'Could not connect. Check your internet and try again.';
+    status.className = 'pw-status fail';
+    btn.textContent = 'Unlock';
+    btn.disabled = false;
+  }
 }
 </script>
 </body>
