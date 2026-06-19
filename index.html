@@ -1528,12 +1528,14 @@ function printCompletedReport() {
 }
 
 document.addEventListener('click', (e) => {
-  document.querySelectorAll('.job-card.card-focused').forEach(card => {
-    if (!card.contains(e.target)) {
-      card.classList.remove('card-focused');
-      document.getElementById('jobs-wrap').classList.remove('has-focused');
-    }
-  });
+  const clickedCard = e.target.closest('.job-card');
+  document.querySelectorAll('.job-card.card-focused').forEach(card => card.classList.remove('card-focused'));
+  if (clickedCard && clickedCard.classList.contains('is-done')) {
+    clickedCard.classList.add('card-focused');
+    document.getElementById('jobs-wrap').classList.add('has-focused');
+  } else {
+    document.getElementById('jobs-wrap').classList.remove('has-focused');
+  }
 });
 </script>
 </body>
