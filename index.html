@@ -815,10 +815,12 @@
           <div class="photo-picker-wrap" id="lj-picker-wrap">
             <button class="edit-upload-label" style="font-size:12px;padding:6px 14px;cursor:pointer;border:none;" onclick="togglePhotoPicker(event,'lj-picker-menu')">📷 Photo / Video</button>
             <div class="photo-picker-menu" id="lj-picker-menu">
-              <label class="photo-picker-opt" for="lj-photo-cam">📷 Take photo or video</label>
+              <label class="photo-picker-opt" for="lj-photo-cam">📷 Take a photo</label>
+              <label class="photo-picker-opt" for="lj-video-cam">🎥 Take a video</label>
               <label class="photo-picker-opt" for="lj-photo-lib">🖼️ Choose from library</label>
             </div>
-            <input type="file" id="lj-photo-cam" accept="image/*,video/*" capture="environment" style="display:none" onchange="stageLjPhoto(this)">
+            <input type="file" id="lj-photo-cam" accept="image/*" capture="environment" style="display:none" onchange="stageLjPhoto(this)">
+            <input type="file" id="lj-video-cam" accept="video/*" capture="environment" style="display:none" onchange="stageLjPhoto(this)">
             <input type="file" id="lj-photo-lib" accept="image/*,video/*" style="display:none" onchange="stageLjPhoto(this)">
           </div>
           <span id="lj-photo-name" style="font-size:12px; color:var(--ink-mid);"></span>
@@ -1049,10 +1051,12 @@ function buildCard(job) {
         <div class="photo-picker-wrap" id="cmnt-picker-wrap-${esc(job.id)}">
           <button class="edit-upload-label" style="font-size:11px;padding:5px 10px;cursor:pointer;border:none;" onclick="togglePhotoPicker(event,'cmnt-picker-menu-${esc(job.id)}')">📷 Photo / Video</button>
           <div class="photo-picker-menu" id="cmnt-picker-menu-${esc(job.id)}">
-            <label class="photo-picker-opt" for="cmnt-photo-cam-${esc(job.id)}">📷 Take photo or video</label>
+            <label class="photo-picker-opt" for="cmnt-photo-cam-${esc(job.id)}">📷 Take a photo</label>
+            <label class="photo-picker-opt" for="cmnt-video-cam-${esc(job.id)}">🎥 Take a video</label>
             <label class="photo-picker-opt" for="cmnt-photo-${esc(job.id)}">🖼️ Choose from library</label>
           </div>
-          <input type="file" id="cmnt-photo-cam-${esc(job.id)}" accept="image/*,video/*" capture="environment" style="display:none" onchange="stageCmntPhoto('${esc(job.id)}', this)">
+          <input type="file" id="cmnt-photo-cam-${esc(job.id)}" accept="image/*" capture="environment" style="display:none" onchange="stageCmntPhoto('${esc(job.id)}', this)">
+          <input type="file" id="cmnt-video-cam-${esc(job.id)}" accept="video/*" capture="environment" style="display:none" onchange="stageCmntPhoto('${esc(job.id)}', this)">
           <input type="file" id="cmnt-photo-${esc(job.id)}" accept="image/*,video/*" style="display:none" onchange="stageCmntPhoto('${esc(job.id)}', this)">
         </div>
         <span class="comment-status" id="cmnt-status-${esc(job.id)}"></span>
@@ -1130,10 +1134,12 @@ function buildCard(job) {
         <div class="photo-picker-wrap" id="edit-picker-wrap-${esc(job.id)}">
           <button class="edit-upload-label" style="cursor:pointer;border:none;" onclick="togglePhotoPicker(event,'edit-picker-menu-${esc(job.id)}')">📷 Photo / Video</button>
           <div class="photo-picker-menu" id="edit-picker-menu-${esc(job.id)}">
-            <label class="photo-picker-opt" for="edit-photo-cam-${esc(job.id)}">📷 Take photo or video</label>
+            <label class="photo-picker-opt" for="edit-photo-cam-${esc(job.id)}">📷 Take a photo</label>
+            <label class="photo-picker-opt" for="edit-video-cam-${esc(job.id)}">🎥 Take a video</label>
             <label class="photo-picker-opt" for="edit-photo-file-${esc(job.id)}">🖼️ Choose from library</label>
           </div>
-          <input type="file" id="edit-photo-cam-${esc(job.id)}" accept="image/*,video/*" capture="environment" style="display:none" onchange="previewEditPhoto('${esc(job.id)}', this)">
+          <input type="file" id="edit-photo-cam-${esc(job.id)}" accept="image/*" capture="environment" style="display:none" onchange="previewEditPhoto('${esc(job.id)}', this)">
+          <input type="file" id="edit-video-cam-${esc(job.id)}" accept="video/*" capture="environment" style="display:none" onchange="previewEditPhoto('${esc(job.id)}', this)">
           <input type="file" id="edit-photo-file-${esc(job.id)}" accept="image/*,video/*" style="display:none" onchange="previewEditPhoto('${esc(job.id)}', this)">
         </div>
         <div id="edit-photo-new-${esc(job.id)}"></div>
@@ -1855,6 +1861,7 @@ function openLogJobModal() {
   document.getElementById('lj-safety').checked = false;
   document.getElementById('lj-notes').value = '';
   document.getElementById('lj-photo-cam').value = '';
+  document.getElementById('lj-video-cam').value = '';
   document.getElementById('lj-photo-lib').value = '';
   document.getElementById('lj-photo-preview').innerHTML = '';
   document.getElementById('lj-photo-name').textContent = '';
