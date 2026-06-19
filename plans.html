@@ -159,8 +159,13 @@
     .add-update-form textarea { width: 100%; padding: 8px 10px; border: 1.5px solid var(--stone); border-radius: 7px; font-size: 13px; font-family: inherit; resize: vertical; outline: none; min-height: 60px; }
     .add-update-form textarea:focus { border-color: var(--maroon); }
     .add-update-actions { display: flex; gap: 8px; margin-top: 6px; align-items: center; flex-wrap: wrap; }
-    .add-update-photo-label { padding: 7px 12px; background: var(--cream); border: 1.5px solid var(--stone); border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--ink-mid); }
+    .add-update-photo-label { padding: 7px 12px; background: var(--cream); border: 1.5px solid var(--stone); border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--ink-mid); font-family: inherit; }
     .add-update-photo-label:hover { background: var(--cream-dark); }
+    .photo-picker-wrap { position: relative; display: inline-block; }
+    .photo-picker-menu { display: none; position: absolute; bottom: calc(100% + 6px); left: 0; background: #fff; border: 1px solid var(--stone); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.12); z-index: 200; min-width: 180px; padding: 4px 0; white-space: nowrap; }
+    .photo-picker-menu.open { display: block; }
+    .photo-picker-opt { display: flex; align-items: center; gap: 9px; padding: 9px 14px; font-size: 13px; font-family: inherit; color: var(--ink); cursor: pointer; }
+    .photo-picker-opt:hover { background: var(--cream); }
     .update-photo-preview { margin-top: 6px; font-size: 12px; color: var(--green); font-weight: 600; }
 
     /* ── Modal ── */
@@ -453,9 +458,17 @@ function buildPlanJobCard(pj) {
         <textarea id="update-note-${pj.id}" placeholder="Add a progress note…"></textarea>
         <div class="add-update-actions">
           <button class="btn-primary btn-sm" onclick="postUpdate('${pj.id}')">Post update</button>
-          <label class="add-update-photo-label">📷 Add photo
-            <input type="file" accept="image/*,video/*" style="display:none" onchange="stageUpdatePhoto('${pj.id}', this)">
-          </label>
+          <div class="photo-picker-wrap" id="upd-picker-wrap-${pj.id}">
+            <button class="add-update-photo-label" onclick="toggleUpdatePicker(event,'upd-picker-menu-${pj.id}')">📷 Photo / Video</button>
+            <div class="photo-picker-menu" id="upd-picker-menu-${pj.id}">
+              <label class="photo-picker-opt" for="upd-photo-cam-${pj.id}">📷 Take a photo</label>
+              <label class="photo-picker-opt" for="upd-video-cam-${pj.id}">🎥 Take a video</label>
+              <label class="photo-picker-opt" for="upd-photo-lib-${pj.id}">🖼️ Choose from library</label>
+            </div>
+            <input type="file" id="upd-photo-cam-${pj.id}" accept="image/*" capture="environment" style="display:none" onchange="stageUpdatePhoto('${pj.id}', this)">
+            <input type="file" id="upd-video-cam-${pj.id}" accept="video/*" capture="environment" style="display:none" onchange="stageUpdatePhoto('${pj.id}', this)">
+            <input type="file" id="upd-photo-lib-${pj.id}" accept="image/*,video/*" style="display:none" onchange="stageUpdatePhoto('${pj.id}', this)">
+          </div>
           <span class="update-photo-preview" id="update-photo-label-${pj.id}"></span>
         </div>
       </div>
@@ -536,6 +549,13 @@ async function deleteChecklistItem(pjId, itemId) {
   const pj = currentPlanJobs.find(j => j.id === pjId);
   if (pj) pj.checklist = pj.checklist.filter(c => c.id !== itemId);
 }
+
+function toggleUpdatePicker(e, menuId) {
+  e.stopPropagation();
+  document.querySelectorAll('.photo-picker-menu.open').forEach(m => { if (m.id !== menuId) m.classList.remove('open'); });
+  document.getElementById(menuId)?.classList.toggle('open');
+}
+document.addEventListener('click', () => document.querySelectorAll('.photo-picker-menu.open').forEach(m => m.classList.remove('open')));
 
 function stageUpdatePhoto(pjId, input) {
   const file = input.files[0];
