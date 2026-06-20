@@ -1171,6 +1171,10 @@ function buildCard(job) {
   const editSafety = job.safety_concern || '';
   const editResp = job.responsible || '';
   const editCat = job.category || '';
+  const respVals = editResp ? editResp.split(',').map(s => s.trim()) : [];
+  const catVals = editCat ? editCat.split(',').map(s => s.trim()) : [];
+  const editRespLabel = editResp || '— Not set —';
+  const editCatLabel = editCat || '— Not set —';
   const currentPhotoHtml = job.photo
     ? `<div style="position:relative;display:inline-block;margin-bottom:6px;" id="current-photo-wrap-${esc(job.id)}">
          ${isVideo(job.photo)
@@ -1208,26 +1212,36 @@ function buildCard(job) {
       </div>
       <div class="edit-row">
         <label>Responsible</label>
-        <select id="edit-responsible-${esc(job.id)}">
-          <option value="">— Not set —</option>
-          <option value="Club"${editResp.includes('Club') ? ' selected' : ''}>🏄 Club</option>
-          <option value="Council"${editResp.includes('Council') ? ' selected' : ''}>🏛️ Council</option>
-          <option value="Trades"${editResp.toLowerCase().includes('trade') ? ' selected' : ''}>🔨 Trades</option>
-          <option value="Working Bee (Club)"${editResp.toLowerCase().includes('working') ? ' selected' : ''}>🐝 Working Bee (Club)</option>
-        </select>
+        <div class="multi-select-wrap" style="width:100%">
+          <button type="button" class="multi-select-btn" id="edit-resp-btn-${esc(job.id)}" style="width:100%;justify-content:space-between;" onclick="toggleEditDropdown(event,'edit-resp-dd-${esc(job.id)}','edit-resp-btn-${esc(job.id)}')">
+            <span id="edit-resp-lbl-${esc(job.id)}">${editRespLabel}</span>
+            <span class="multi-select-arrow">▾</span>
+          </button>
+          <div class="multi-select-dropdown" id="edit-resp-dd-${esc(job.id)}" style="width:100%;left:0">
+            <label class="multi-select-option"><input type="checkbox" value="Club" ${respVals.includes('Club') ? 'checked' : ''} onchange="updateEditMultiLabel('edit-resp-dd-${esc(job.id)}','edit-resp-lbl-${esc(job.id)}','— Not set —')"> 🏄 Club</label>
+            <label class="multi-select-option"><input type="checkbox" value="Council" ${respVals.includes('Council') ? 'checked' : ''} onchange="updateEditMultiLabel('edit-resp-dd-${esc(job.id)}','edit-resp-lbl-${esc(job.id)}','— Not set —')"> 🏛️ Council</label>
+            <label class="multi-select-option"><input type="checkbox" value="Trades" ${respVals.includes('Trades') ? 'checked' : ''} onchange="updateEditMultiLabel('edit-resp-dd-${esc(job.id)}','edit-resp-lbl-${esc(job.id)}','— Not set —')"> 🔨 Trades</label>
+            <label class="multi-select-option"><input type="checkbox" value="Working Bee (Club)" ${respVals.includes('Working Bee (Club)') ? 'checked' : ''} onchange="updateEditMultiLabel('edit-resp-dd-${esc(job.id)}','edit-resp-lbl-${esc(job.id)}','— Not set —')"> 🐝 Working Bee (Club)</label>
+          </div>
+        </div>
       </div>
       <div class="edit-row">
         <label>Category</label>
-        <select id="edit-category-${esc(job.id)}">
-          <option value="">— Not set —</option>
-          <option value="Repair"${editCat === 'Repair' ? ' selected' : ''}>🔧 Repair</option>
-          <option value="Replace"${editCat === 'Replace' ? ' selected' : ''}>🔄 Replace</option>
-          <option value="Painting"${editCat === 'Painting' ? ' selected' : ''}>🎨 Painting</option>
-          <option value="Cleaning"${editCat === 'Cleaning' ? ' selected' : ''}>🧹 Cleaning</option>
-          <option value="Gardening"${editCat === 'Gardening' ? ' selected' : ''}>🌿 Gardening</option>
-          <option value="Repair/Paint"${editCat.includes('Paint') && editCat.includes('Repair') ? ' selected' : ''}>🔧🎨 Repair/Paint</option>
-          <option value="Other"${editCat === 'Other' ? ' selected' : ''}>📋 Other</option>
-        </select>
+        <div class="multi-select-wrap" style="width:100%">
+          <button type="button" class="multi-select-btn" id="edit-cat-btn-${esc(job.id)}" style="width:100%;justify-content:space-between;" onclick="toggleEditDropdown(event,'edit-cat-dd-${esc(job.id)}','edit-cat-btn-${esc(job.id)}')">
+            <span id="edit-cat-lbl-${esc(job.id)}">${editCatLabel}</span>
+            <span class="multi-select-arrow">▾</span>
+          </button>
+          <div class="multi-select-dropdown" id="edit-cat-dd-${esc(job.id)}" style="width:100%;left:0">
+            <label class="multi-select-option"><input type="checkbox" value="Repair" ${catVals.includes('Repair') ? 'checked' : ''} onchange="updateEditMultiLabel('edit-cat-dd-${esc(job.id)}','edit-cat-lbl-${esc(job.id)}','— Not set —')"> 🔧 Repair</label>
+            <label class="multi-select-option"><input type="checkbox" value="Replace" ${catVals.includes('Replace') ? 'checked' : ''} onchange="updateEditMultiLabel('edit-cat-dd-${esc(job.id)}','edit-cat-lbl-${esc(job.id)}','— Not set —')"> 🔄 Replace</label>
+            <label class="multi-select-option"><input type="checkbox" value="Painting" ${catVals.includes('Painting') ? 'checked' : ''} onchange="updateEditMultiLabel('edit-cat-dd-${esc(job.id)}','edit-cat-lbl-${esc(job.id)}','— Not set —')"> 🎨 Painting</label>
+            <label class="multi-select-option"><input type="checkbox" value="Cleaning" ${catVals.includes('Cleaning') ? 'checked' : ''} onchange="updateEditMultiLabel('edit-cat-dd-${esc(job.id)}','edit-cat-lbl-${esc(job.id)}','— Not set —')"> 🧹 Cleaning</label>
+            <label class="multi-select-option"><input type="checkbox" value="Gardening" ${catVals.includes('Gardening') ? 'checked' : ''} onchange="updateEditMultiLabel('edit-cat-dd-${esc(job.id)}','edit-cat-lbl-${esc(job.id)}','— Not set —')"> 🌿 Gardening</label>
+            <label class="multi-select-option"><input type="checkbox" value="Repair/Paint" ${catVals.includes('Repair/Paint') ? 'checked' : ''} onchange="updateEditMultiLabel('edit-cat-dd-${esc(job.id)}','edit-cat-lbl-${esc(job.id)}','— Not set —')"> 🔧🎨 Repair/Paint</label>
+            <label class="multi-select-option"><input type="checkbox" value="Other" ${catVals.includes('Other') ? 'checked' : ''} onchange="updateEditMultiLabel('edit-cat-dd-${esc(job.id)}','edit-cat-lbl-${esc(job.id)}','— Not set —')"> 📋 Other</label>
+          </div>
+        </div>
       </div>
       <div class="edit-row">
         <label>Notes</label>
@@ -1334,6 +1348,21 @@ function updateMultiFilter(ddId, labelId, allLabel) {
 }
 
 function toggleRespDropdown(e) { toggleDropdown(e, 'resp-dropdown', 'resp-btn'); }
+
+function toggleEditDropdown(e, ddId, btnId) {
+  e.stopPropagation();
+  const dd = document.getElementById(ddId);
+  const btn = document.getElementById(btnId);
+  const isOpen = dd.classList.contains('open');
+  document.querySelectorAll('.edit-panel .multi-select-dropdown').forEach(d => d.classList.remove('open'));
+  document.querySelectorAll('.edit-panel .multi-select-btn').forEach(b => b.classList.remove('active'));
+  if (!isOpen) { dd.classList.add('open'); btn.classList.add('active'); }
+}
+
+function updateEditMultiLabel(ddId, lblId, placeholder) {
+  const checked = [...document.querySelectorAll(`#${ddId} input:checked`)].map(cb => cb.value);
+  document.getElementById(lblId).textContent = checked.length ? checked.join(', ') : placeholder;
+}
 function updateCategoryFilter() {
   const paintEl = document.getElementById('cat-painting');
   const rpEl = document.getElementById('cat-repaintpaint');
@@ -1365,6 +1394,14 @@ document.addEventListener('click', e => {
   document.getElementById('priority-btn').classList.toggle('active', document.getElementById('priority-dropdown').classList.contains('open'));
   document.getElementById('category-btn').classList.toggle('active', document.getElementById('category-dropdown').classList.contains('open'));
   document.getElementById('resp-btn').classList.toggle('active', document.getElementById('resp-dropdown').classList.contains('open'));
+  // Close edit panel dropdowns when clicking outside
+  document.querySelectorAll('.edit-panel .multi-select-dropdown.open').forEach(dd => {
+    if (!dd.closest('.multi-select-wrap').contains(e.target)) {
+      dd.classList.remove('open');
+      const btnId = dd.id.replace('edit-resp-dd-', 'edit-resp-btn-').replace('edit-cat-dd-', 'edit-cat-btn-');
+      document.getElementById(btnId)?.classList.remove('active');
+    }
+  });
 });
 
 // ── Filters ──────────────────────────────────────────────────
@@ -1790,8 +1827,8 @@ async function saveEdit(jobId) {
       location: document.getElementById(`edit-location-${jobId}`)?.value || null,
       issue: document.getElementById(`edit-issue-${jobId}`)?.value || null,
       safety_concern: document.getElementById(`edit-safety-${jobId}`)?.value || null,
-      responsible: document.getElementById(`edit-responsible-${jobId}`)?.value || null,
-      category: document.getElementById(`edit-category-${jobId}`)?.value || null,
+      responsible: [...document.querySelectorAll(`#edit-resp-dd-${CSS.escape(jobId)} input:checked`)].map(cb => cb.value).join(', ') || null,
+      category: [...document.querySelectorAll(`#edit-cat-dd-${CSS.escape(jobId)} input:checked`)].map(cb => cb.value).join(', ') || null,
       notes: document.getElementById(`edit-notes-${jobId}`)?.value.trim(),
     };
     if (photoUrl) body.photo = photoUrl;
