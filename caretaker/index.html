@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Caretaker Handbook</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --maroon: #7B1A1A;
+      --cream: #F5F0E8;
+      --cream-dark: #EAE4D8;
+      --ink: #2C2C2A;
+      --ink-mid: #5F5E5A;
+      --ink-light: #888780;
+      --stone: #D3CFC7;
+      --green: #2d6a2d;
+      --green-light: #e8f5e8;
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    body { font-family: var(--font); background: var(--cream); color: var(--ink); min-height: 100vh; }
+
+    /* ── Lock screen ── */
+    #lock-screen {
+      position: fixed; inset: 0; background: var(--maroon);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      z-index: 1000; padding: 24px;
+    }
+    #lock-screen h1 { color: #fff; font-size: 22px; font-weight: 700; margin-bottom: 6px; text-align: center; }
+    #lock-screen p { color: rgba(255,255,255,0.7); font-size: 14px; margin-bottom: 32px; text-align: center; }
+    #lock-screen input {
+      width: 100%; max-width: 300px; padding: 14px 16px; border: none; border-radius: 10px;
+      font-size: 16px; font-family: var(--font); text-align: center; letter-spacing: 0.1em;
+      margin-bottom: 12px; outline: none;
+    }
+    #lock-screen button {
+      width: 100%; max-width: 300px; padding: 14px; background: #fff;
+      color: var(--maroon); border: none; border-radius: 10px; font-size: 16px;
+      font-weight: 700; cursor: pointer; font-family: var(--font);
+    }
+    #lock-error { color: #ffaaaa; font-size: 13px; margin-top: 8px; min-height: 20px; text-align: center; }
+
+    /* ── App ── */
+    #app { display: none; }
+
+    /* ── Top bar ── */
+    .topbar {
+      background: var(--maroon); color: #fff; padding: 14px 16px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .topbar-title { font-size: 17px; font-weight: 700; }
+    .topbar-sub { font-size: 12px; opacity: 0.75; margin-top: 2px; }
+    .topbar-date { font-size: 13px; opacity: 0.85; text-align: right; }
+
+    /* ── Nav ── */
+    .nav {
+      background: #fff; border-bottom: 1px solid var(--stone);
+      display: flex; overflow-x: auto; -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .nav::-webkit-scrollbar { display: none; }
+    .nav-btn {
+      flex-shrink: 0; padding: 12px 16px; font-size: 13px; font-weight: 600;
+      color: var(--ink-mid); border: none; background: none; cursor: pointer;
+      border-bottom: 3px solid transparent; font-family: var(--font);
+      white-space: nowrap;
+    }
+    .nav-btn.active { color: var(--maroon); border-bottom-color: var(--maroon); }
+
+    /* ── Pages ── */
+    .page { display: none; padding: 16px; max-width: 700px; margin: 0 auto; padding-bottom: 40px; }
+    .page.active { display: block; }
+
+    /* ── Home page ── */
+    .welcome-card {
+      background: #fff; border-radius: 12px; padding: 20px;
+      margin-bottom: 16px; border: 1px solid var(--stone);
+    }
+    .welcome-card h2 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+    .welcome-card p { font-size: 14px; color: var(--ink-mid); line-height: 1.6; }
+
+    .alert-card {
+      border-radius: 12px; padding: 16px 20px; margin-bottom: 12px;
+      display: flex; align-items: flex-start; gap: 12px;
+    }
+    .alert-card.bins { background: #fff8e1; border: 1px solid #ffe082; }
+    .alert-card.calendar { background: #e8f4fd; border: 1px solid #90caf9; }
+    .alert-icon { font-size: 22px; flex-shrink: 0; }
+    .alert-text strong { font-size: 14px; font-weight: 700; display: block; margin-bottom: 2px; }
+    .alert-text p { font-size: 13px; color: var(--ink-mid); line-height: 1.5; }
+
+    .quick-links { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
+    .quick-link {
+      background: #fff; border: 1px solid var(--stone); border-radius: 10px;
+      padding: 14px; text-align: center; cursor: pointer; border: none;
+      font-family: var(--font); transition: background 0.15s;
+    }
+    .quick-link:active { background: var(--cream); }
+    .quick-link-icon { font-size: 24px; margin-bottom: 6px; }
+    .quick-link-label { font-size: 13px; font-weight: 600; color: var(--ink); }
+
+    /* ── Checklists ── */
+    .checklist-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px; flex-wrap: wrap; gap: 10px;
+    }
+    .checklist-header h2 { font-size: 18px; font-weight: 700; }
+    .tick-all-btn {
+      padding: 8px 16px; background: var(--maroon); color: #fff;
+      border: none; border-radius: 8px; font-size: 13px; font-weight: 600;
+      cursor: pointer; font-family: var(--font);
+    }
+    .untick-all-btn {
+      padding: 8px 16px; background: #fff; color: var(--ink-mid);
+      border: 1.5px solid var(--stone); border-radius: 8px; font-size: 13px;
+      font-weight: 600; cursor: pointer; font-family: var(--font); margin-left: 6px;
+    }
+
+    .section-card {
+      background: #fff; border-radius: 12px; margin-bottom: 12px;
+      border: 1px solid var(--stone); overflow: hidden;
+    }
+    .section-title {
+      padding: 14px 16px; font-size: 15px; font-weight: 700;
+      background: var(--cream); border-bottom: 1px solid var(--stone);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .section-title .section-icon { font-size: 18px; }
+
+    .check-item {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 12px 16px; border-bottom: 1px solid var(--cream-dark);
+      cursor: pointer; transition: background 0.1s;
+    }
+    .check-item:last-child { border-bottom: none; }
+    .check-item:active { background: var(--cream); }
+    .check-item input[type="checkbox"] {
+      width: 22px; height: 22px; accent-color: var(--maroon);
+      cursor: pointer; flex-shrink: 0; margin-top: 1px;
+    }
+    .check-item label {
+      font-size: 14px; line-height: 1.5; color: var(--ink); cursor: pointer; flex: 1;
+    }
+    .check-item.checked label { text-decoration: line-through; color: var(--ink-light); }
+    .check-item .note {
+      font-size: 12px; color: var(--ink-light); margin-top: 3px;
+      font-style: italic; display: block;
+    }
+    .check-item .door-note {
+      font-size: 12px; color: var(--maroon); margin-top: 3px;
+      font-weight: 600; display: block;
+    }
+
+    /* ── Codes page ── */
+    .code-card {
+      background: #fff; border-radius: 12px; margin-bottom: 12px;
+      border: 1px solid var(--stone); overflow: hidden;
+    }
+    .code-card-title {
+      padding: 12px 16px; font-size: 13px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-light);
+      background: var(--cream); border-bottom: 1px solid var(--stone);
+    }
+    .code-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px; border-bottom: 1px solid var(--cream-dark);
+    }
+    .code-row:last-child { border-bottom: none; }
+    .code-label { font-size: 14px; color: var(--ink); flex: 1; }
+    .code-value {
+      font-size: 18px; font-weight: 700; color: var(--maroon);
+      font-family: 'Courier New', monospace; letter-spacing: 0.08em;
+    }
+    .code-note { font-size: 12px; color: var(--ink-light); margin-top: 2px; }
+
+    /* ── Apartment page ── */
+    .info-card {
+      background: #fff; border-radius: 12px; margin-bottom: 12px;
+      border: 1px solid var(--stone); overflow: hidden;
+    }
+    .info-card-title {
+      padding: 12px 16px; font-size: 14px; font-weight: 700;
+      background: var(--cream); border-bottom: 1px solid var(--stone);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .info-item {
+      padding: 12px 16px; border-bottom: 1px solid var(--cream-dark);
+      font-size: 14px; line-height: 1.6; color: var(--ink);
+    }
+    .info-item:last-child { border-bottom: none; }
+    .info-item strong { color: var(--ink); }
+
+    /* ── Contacts page ── */
+    .contact-card {
+      background: #fff; border-radius: 12px; margin-bottom: 12px;
+      border: 1px solid var(--stone); padding: 16px 18px;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    }
+    .contact-info { flex: 1; }
+    .contact-name { font-size: 15px; font-weight: 700; }
+    .contact-role { font-size: 13px; color: var(--ink-light); margin-top: 2px; }
+    .contact-call {
+      padding: 10px 18px; background: var(--maroon); color: #fff;
+      border: none; border-radius: 8px; font-size: 14px; font-weight: 600;
+      cursor: pointer; font-family: var(--font); text-decoration: none;
+      display: inline-block;
+    }
+    .contacts-note {
+      background: #fff; border-radius: 12px; padding: 16px 18px;
+      border: 1px solid var(--stone); color: var(--ink-mid);
+      font-size: 14px; line-height: 1.6; text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Lock screen -->
+<div id="lock-screen">
+  <h1>🏄 Caretaker Handbook</h1>
+  <p>Freshwater Surf Life Saving Club</p>
+  <input type="password" id="pw-input" placeholder="Enter password" onkeydown="if(event.key==='Enter')unlock()">
+  <button onclick="unlock()">Enter</button>
+  <div id="lock-error"></div>
+</div>
+
+<!-- App -->
+<div id="app">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">🏄 Caretaker Handbook</div>
+      <div class="topbar-sub">Freshwater SLSC</div>
+    </div>
+    <div class="topbar-date" id="topbar-date"></div>
+  </div>
+
+  <div class="nav">
+    <button class="nav-btn active" onclick="showPage('home', this)">🏠 Home</button>
+    <button class="nav-btn" onclick="showPage('evening', this)">🌙 Evening</button>
+    <button class="nav-btn" onclick="showPage('weekly', this)">📅 Weekly</button>
+    <button class="nav-btn" onclick="showPage('doors', this)">🚪 Door Checks</button>
+    <button class="nav-btn" onclick="showPage('codes', this)">🔑 Codes</button>
+    <button class="nav-btn" onclick="showPage('apartment', this)">🏠 Apartment</button>
+    <button class="nav-btn" onclick="showPage('contacts', this)">📞 Contacts</button>
+  </div>
+
+  <!-- HOME -->
+  <div id="page-home" class="page active">
+    <div class="welcome-card">
+      <h2 id="welcome-msg">Welcome 👋</h2>
+      <p>Everything you need to look after the club is in this handbook. Work through the Evening checklist each night and the Weekly tasks once a week. Codes and keys are all in the Codes tab.</p>
+    </div>
+
+    <div class="alert-card calendar">
+      <div class="alert-icon">📋</div>
+      <div class="alert-text">
+        <strong>Check the bookings sheet</strong>
+        <p>Check your printed calendar sheet each evening for the following day's bookings. Most days there's nothing extra to do — Bree will let you know if furniture or bins need moving.</p>
+      </div>
+    </div>
+
+    <div id="bins-alert" class="alert-card bins" style="display:none">
+      <div class="alert-icon">🗑️</div>
+      <div class="alert-text">
+        <strong id="bins-msg">Bins out tonight</strong>
+        <p>Put all full bins out for collection. Bring them back in once emptied the next day — if they're not emptied, leave them out for the following day.</p>
+      </div>
+    </div>
+
+    <div class="quick-links">
+      <button class="quick-link" onclick="showPage('evening', document.querySelector('.nav-btn:nth-child(2)'))">
+        <div class="quick-link-icon">🌙</div>
+        <div class="quick-link-label">Evening Checklist</div>
+      </button>
+      <button class="quick-link" onclick="showPage('weekly', document.querySelector('.nav-btn:nth-child(3)'))">
+        <div class="quick-link-icon">📅</div>
+        <div class="quick-link-label">Weekly Tasks</div>
+      </button>
+      <button class="quick-link" onclick="showPage('doors', document.querySelector('.nav-btn:nth-child(4)'))">
+        <div class="quick-link-icon">🚪</div>
+        <div class="quick-link-label">Door Checks</div>
+      </button>
+      <button class="quick-link" onclick="showPage('codes', document.querySelector('.nav-btn:nth-child(5)'))">
+        <div class="quick-link-icon">🔑</div>
+        <div class="quick-link-label">Codes & Keys</div>
+      </button>
+    </div>
+  </div>
+
+  <!-- EVENING CHECKLIST -->
+  <div id="page-evening" class="page">
+    <div class="checklist-header">
+      <h2>🌙 Evening Checklist</h2>
+      <div>
+        <button class="tick-all-btn" onclick="tickAll('evening')">✓ Tick all</button>
+        <button class="untick-all-btn" onclick="untickAll('evening')">↺ Reset</button>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-title"><span class="section-icon">⬇️</span> Basement Level</div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Roller door locked and racks brought in when it gets dark</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Check nippers boardroom roller door — latch closed<span class="note">Also check the door to the disabled chair — make sure latches are not left open</span></label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Rinse sand on floor at roller door to beach</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Does sand need sweeping on the runway?</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Check bin at end of runway for anything smelly<span class="note">Spare bags on shelf in the area with reels</span></label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Changing rooms — sweep or rinse sand off floors and benches into drains<span class="note">Mop if needed to remove footprints. Check and clean sinks/toilets, check supplies, empty bins if needed</span></label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Any dry lost property placed in box</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Check green light on basement door<span class="note">Red = magnet not connecting. No light = emergency switch tripped. Black plastic reset key is on the small nail on the edge of the noticeboard (bluetac loop)</span></label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>🚪 Lock roller doors to beach and gate to driveway<span class="door-note">Door check — do this before leaving the basement</span></label></div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-title"><span class="section-icon">🏠</span> Main Level</div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Hall floors — sweep with wide lilac brush if needed</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Entrance tiles — vacuum up sand if possible without mopping</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Entrance foyer floor mats — vacuum if needed</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Empty bins if needed<span class="note">Thursday and Sunday nights — put out for collection</span></label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Check all toilets for paper and hand towels</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Check and clean toilets and sinks if needed<span class="note">Disabled toilet floors show water marks — a quick mop or damp hand towel keeps it looking clean</span></label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Front balcony — check for bird muck on table tops, stools or floor</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Gym — spot sweep or vacuum, wipe hand prints off mirrors<span class="note">Microfiber cloth on shelf in gym near sound system</span><span class="door-note">🚪 Check gym door is locked before you leave</span></label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>🚪 Check Freshwater room — balcony door and fire escape locked</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>🚪 Check Heritage room — external door locked</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>🚪 Check office — door handle locked, outside balcony doors locked</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>🚪 Check cafe door is closed<span class="note">Very occasionally has been left open</span></label></div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-title"><span class="section-icon">⬆️</span> Top Level</div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Boardroom table — does it need wiping?</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Carpet — vacuum if needed, or prop up chairs and run robot vac</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Any food left out?</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Empty bin (bags in cupboard under the sink)</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>🚪 Check Kooloora room — fire escape and each sliding door to courtyard, double doors in courtyard<span class="door-note">Do this while you're up here</span></label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>🚪 Check mezzanine training area — door to balcony locked</label></div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-title"><span class="section-icon">🌃</span> Final Checks Before Finishing</div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Check outside for rubbish around the club<span class="note">Usually only weekends if there's been drinking</span></label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Girls bathroom doors closed (lock automatically at 9pm, unlock in morning)</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Bins out if it's Thursday or Sunday night<span class="note">Bring them back in once emptied. If not collected, leave for the following day</span></label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>🚪 Check boom gate to overflow carpark<span class="note">Key is on the caretaker lanyard</span></label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>🚪 Front door to club locked</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>🚪 Private entrance door to apartment locked</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Set alarm on Freshwater zone using the Sky Command app<span class="note">Your disarm code on the keypad is 5678. Kitchen alarm and basement alarm both arm automatically at 9pm. Use the app if you need to go in after that — it can also unlock doors. Caretaker key fobs auto-disarm the basement alarm if you tap in after 9pm</span></label></div>
+    </div>
+
+    <p style="font-size:12px;color:var(--ink-light);text-align:center;margin-top:8px;">Ticks reset automatically each day at midnight</p>
+  </div>
+
+  <!-- WEEKLY TASKS -->
+  <div id="page-weekly" class="page">
+    <div class="checklist-header">
+      <h2>📅 Weekly Tasks</h2>
+      <div>
+        <button class="tick-all-btn" onclick="tickAll('weekly')">✓ Tick all</button>
+        <button class="untick-all-btn" onclick="untickAll('weekly')">↺ Reset</button>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-title"><span class="section-icon">🧹</span> Floors</div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Floor machine — clean Kooloora Room floor, mop edges and around gym equipment</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Mop foyer and stairs down to basement and up to training area</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Mop Heritage Room and Freshwater Room</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Vacuum gym and wipe down mirror if needed</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Mop changing rooms and showers with Domestos (bleach)</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Vacuum boardroom and mezzanine training area (robot vac)</label></div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-title"><span class="section-icon">🧽</span> Surfaces & Bathrooms</div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Wipe down boardroom table and boardroom kitchen</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Wipe tops of training area cupboards</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Wipe down desks in office and empty bins if needed. Mop or vacuum floor if needed.</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Wipe down all sinks, taps and toilets with wipes</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Clean mirrors if needed</label></div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-title"><span class="section-icon">💧</span> Other</div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Empty water in footbath rinse container, refill and add a splash of disinfectant/antibacterial solution<span class="note">Container left in the white cupboard where the disabled chair is</span></label></div>
+    </div>
+
+    <p style="font-size:12px;color:var(--ink-light);text-align:center;margin-top:8px;">Ticks reset automatically each Monday</p>
+  </div>
+
+  <!-- DOOR CHECKS -->
+  <div id="page-doors" class="page">
+    <div class="checklist-header">
+      <h2>🚪 Door Checks</h2>
+      <div>
+        <button class="tick-all-btn" onclick="tickAll('doors')">✓ Tick all</button>
+        <button class="untick-all-btn" onclick="untickAll('doors')">↺ Reset</button>
+      </div>
+    </div>
+
+    <p style="font-size:14px;color:var(--ink-mid);margin-bottom:16px;line-height:1.6;">Use this as a final confirmation that all doors are locked. Work top to bottom so you only walk the building once.</p>
+
+    <div class="section-card">
+      <div class="section-title"><span class="section-icon">⬆️</span> Top Level</div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Kooloora Room — fire escape locked</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Kooloora Room — each sliding door to courtyard locked</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Courtyard — double doors locked</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Mezzanine training area — door to balcony locked</label></div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-title"><span class="section-icon">🏠</span> Main Level</div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Freshwater Room — balcony door locked</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Freshwater Room — fire escape locked</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Office — door handle locked</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Office — doors to outside balconies locked</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Heritage Room — external door locked</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Gym door locked</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Cafe door closed</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Front door to club locked</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Girls bathroom doors closed</label></div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-title"><span class="section-icon">⬇️</span> Basement & External</div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Roller doors to beach locked</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Gate to driveway locked</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Basement door secure — green light visible</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Boom gate to overflow carpark locked</label></div>
+      <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Private entrance door to apartment locked</label></div>
+    </div>
+
+    <p style="font-size:12px;color:var(--ink-light);text-align:center;margin-top:8px;">Ticks reset automatically each day at midnight</p>
+  </div>
+
+  <!-- CODES & KEYS -->
+  <div id="page-codes" class="page">
+    <h2 style="font-size:18px;font-weight:700;margin-bottom:16px;">🔑 Codes & Keys</h2>
+
+    <div class="code-card">
+      <div class="code-card-title">Access Codes</div>
+      <div class="code-row">
+        <div><div class="code-label">Gym door</div></div>
+        <div class="code-value">C1730</div>
+      </div>
+      <div class="code-row">
+        <div><div class="code-label">Catering cupboard padlock</div></div>
+        <div class="code-value">2026</div>
+      </div>
+      <div class="code-row">
+        <div><div class="code-label">Alarm disarm code (keypad)</div></div>
+        <div class="code-value">5678</div>
+      </div>
+      <div class="code-row">
+        <div><div class="code-label">Key cabinet in office</div></div>
+        <div class="code-value">1908</div>
+      </div>
+    </div>
+
+    <div class="code-card">
+      <div class="code-card-title">WiFi</div>
+      <div class="code-row">
+        <div><div class="code-label">Club internet</div><div class="code-note">Password on fire reel door in the boardroom</div></div>
+      </div>
+      <div class="code-row">
+        <div><div class="code-label">Netcomm modem</div></div>
+        <div class="code-value" style="font-size:13px;letter-spacing:0.03em;">YsVXz8H76T47yd2U</div>
+      </div>
+    </div>
+
+    <div class="code-card">
+      <div class="code-card-title">Keys</div>
+      <div class="code-row"><div class="code-label">Flagpole key<div class="code-note">On back of door in apartment</div></div></div>
+      <div class="code-row"><div class="code-label">Keys to big cleaning cupboard, council toilets, boom gates<div class="code-note">All on the caretaker lanyard</div></div></div>
+    </div>
+  </div>
+
+  <!-- APARTMENT -->
+  <div id="page-apartment" class="page">
+    <h2 style="font-size:18px;font-weight:700;margin-bottom:16px;">🏠 Apartment Guide</h2>
+
+    <div class="info-card">
+      <div class="info-card-title">🫧 Washing Machine</div>
+      <div class="info-item">Select <strong>cold wash</strong> → choose water level → ignore cycle → choose <strong>Economy</strong> → Start. Put powder or capsule in with the washing.</div>
+    </div>
+
+    <div class="info-card">
+      <div class="info-card-title">🤖 Robot Vac</div>
+      <div class="info-item">Watch that cables don't get caught in it. Best to empty it partway through if you're there when it's running — press the button to pause, empty, then resume.</div>
+    </div>
+
+    <div class="info-card">
+      <div class="info-card-title">🌡️ Heater</div>
+      <div class="info-item">Feel free to use it — just don't forget to turn it off before you leave. <strong>Do not leave on if you're not home.</strong></div>
+    </div>
+
+    <div class="info-card">
+      <div class="info-card-title">🚿 Shower</div>
+      <div class="info-item">Put the extractor fan on when you use the shower.</div>
+    </div>
+
+    <div class="info-card">
+      <div class="info-card-title">📅 Tuesdays — Joey Jigs</div>
+      <div class="info-item">After the kids music class on Tuesday there is always a lot of sand in the foyer — you'll notice this in the evening when you clean.</div>
+    </div>
+  </div>
+
+  <!-- CONTACTS -->
+  <div id="page-contacts" class="page">
+    <h2 style="font-size:18px;font-weight:700;margin-bottom:16px;">📞 Emergency Contacts</h2>
+
+    <div class="contacts-note">
+      Emergency contact details will be added here before you arrive. This page will be updated with names and numbers for Bree and any other key people.
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // ── Password ──────────────────────────────────────────────────
+  const PW_HASH = '8a71c933c7c6c7b66ef5843c6a8b1ed4'; // freshwater26
+
+  function simpleHash(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = ((hash << 5) - hash) + str.charCodeAt(i);
+      hash |= 0;
+    }
+    return Math.abs(hash).toString(16).padStart(8, '0').repeat(4).slice(0, 32);
+  }
+
+  function unlock() {
+    const val = document.getElementById('pw-input').value;
+    if (simpleHash(val) === PW_HASH) {
+      localStorage.setItem('caretaker_auth', simpleHash(val));
+      document.getElementById('lock-screen').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      init();
+    } else {
+      document.getElementById('lock-error').textContent = 'Incorrect password — try again';
+      document.getElementById('pw-input').value = '';
+    }
+  }
+
+  // Auto-unlock if already authenticated
+  if (localStorage.getItem('caretaker_auth') === simpleHash('freshwater26')) {
+    document.getElementById('lock-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+  }
+
+  // ── Navigation ────────────────────────────────────────────────
+  function showPage(id, btn) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('page-' + id).classList.add('active');
+    if (btn) btn.classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  // ── Date & bins alert ─────────────────────────────────────────
+  function init() {
+    const now = new Date();
+    const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const dayName = days[now.getDay()];
+    const dateStr = `${dayName} ${now.getDate()} ${months[now.getMonth()]}`;
+    document.getElementById('topbar-date').textContent = dateStr;
+
+    // Bins alert — Thursday (4) and Sunday (0)
+    const day = now.getDay();
+    const hour = now.getHours();
+    if ((day === 4 || day === 0) && hour >= 17) {
+      const binsAlert = document.getElementById('bins-alert');
+      binsAlert.style.display = 'flex';
+      document.getElementById('bins-msg').textContent =
+        day === 4 ? '🗑️ Bins out tonight — Thursday collection' : '🗑️ Bins out tonight — Sunday collection';
+    }
+
+    const greetHour = now.getHours();
+    const greeting = greetHour < 12 ? 'Good morning 👋' : greetHour < 17 ? 'Good afternoon 👋' : 'Good evening 👋';
+    document.getElementById('welcome-msg').textContent = greeting;
+
+    loadTicks();
+    checkResets();
+  }
+
+  if (localStorage.getItem('caretaker_auth') === simpleHash('freshwater26')) init();
+
+  // ── Checklists ────────────────────────────────────────────────
+  function toggleCheck(item) {
+    const cb = item.querySelector('input[type="checkbox"]');
+    cb.checked = !cb.checked;
+    item.classList.toggle('checked', cb.checked);
+    saveTicks();
+  }
+
+  function tickAll(pageId) {
+    const page = document.getElementById('page-' + pageId);
+    page.querySelectorAll('.check-item').forEach(item => {
+      item.querySelector('input').checked = true;
+      item.classList.add('checked');
+    });
+    saveTicks();
+  }
+
+  function untickAll(pageId) {
+    const page = document.getElementById('page-' + pageId);
+    page.querySelectorAll('.check-item').forEach(item => {
+      item.querySelector('input').checked = false;
+      item.classList.remove('checked');
+    });
+    saveTicks();
+  }
+
+  function saveTicks() {
+    const state = {};
+    document.querySelectorAll('.check-item').forEach((item, i) => {
+      state[i] = item.querySelector('input').checked;
+    });
+    localStorage.setItem('caretaker_ticks', JSON.stringify(state));
+    localStorage.setItem('caretaker_ticks_date', new Date().toDateString());
+    localStorage.setItem('caretaker_ticks_week', getWeekKey());
+  }
+
+  function loadTicks() {
+    const saved = JSON.parse(localStorage.getItem('caretaker_ticks') || '{}');
+    document.querySelectorAll('.check-item').forEach((item, i) => {
+      if (saved[i]) {
+        item.querySelector('input').checked = true;
+        item.classList.add('checked');
+      }
+    });
+  }
+
+  function getWeekKey() {
+    const now = new Date();
+    const jan1 = new Date(now.getFullYear(), 0, 1);
+    const week = Math.ceil(((now - jan1) / 86400000 + jan1.getDay() + 1) / 7);
+    return `${now.getFullYear()}-W${week}`;
+  }
+
+  function checkResets() {
+    const savedDate = localStorage.getItem('caretaker_ticks_date');
+    const today = new Date().toDateString();
+    const savedWeek = localStorage.getItem('caretaker_ticks_week');
+    const thisWeek = getWeekKey();
+
+    // Daily pages reset at midnight
+    if (savedDate && savedDate !== today) {
+      ['evening', 'doors'].forEach(pageId => {
+        const page = document.getElementById('page-' + pageId);
+        if (page) page.querySelectorAll('.check-item').forEach(item => {
+          item.querySelector('input').checked = false;
+          item.classList.remove('checked');
+        });
+      });
+    }
+
+    // Weekly tasks reset on Monday
+    if (savedWeek && savedWeek !== thisWeek) {
+      const page = document.getElementById('page-weekly');
+      if (page) page.querySelectorAll('.check-item').forEach(item => {
+        item.querySelector('input').checked = false;
+        item.classList.remove('checked');
+      });
+    }
+  }
+</script>
+</body>
+</html>
