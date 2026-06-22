@@ -1584,8 +1584,10 @@ async function postComment(jobId) {
 
   try {
     let photoUrl;
+    let localPreviewUrl = null;
     const pendingFile = commentPhotoFiles[jobId];
     if (pendingFile) {
+      localPreviewUrl = URL.createObjectURL(pendingFile);
       if (statusEl) statusEl.textContent = 'Uploading...';
       photoUrl = await uploadJobPhoto(pendingFile);
       delete commentPhotoFiles[jobId];
@@ -1600,7 +1602,9 @@ async function postComment(jobId) {
     if (!data.success) throw new Error(data.error || 'Post failed');
 
     if (!commentsData[jobId]) commentsData[jobId] = [];
-    commentsData[jobId].push(data.comment);
+    // Use local blob URL for immediate display — GitHub Pages takes ~60s to serve new uploads
+    const displayComment = localPreviewUrl ? { ...data.comment, photo: localPreviewUrl } : data.comment;
+    commentsData[jobId].push(displayComment);
 
     rebuildCard(jobId);
 
