@@ -1711,6 +1711,8 @@ window.addEventListener('scroll', () => {
     const jobId = body.id.replace('cmnt-body-', '');
     const textarea = document.getElementById(`cmnt-input-${jobId}`);
     const hasPhoto = commentPhotoFiles && commentPhotoFiles[jobId];
+    // Don't collapse if the user is actively focused in this comment box
+    if (textarea && document.activeElement === textarea) return;
     if (textarea && !textarea.value.trim() && !hasPhoto) {
       rebuildCard(jobId);
     }
